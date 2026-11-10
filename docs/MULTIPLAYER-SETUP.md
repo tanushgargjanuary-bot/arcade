@@ -1,86 +1,68 @@
-# Multiplayer server setup
+# Multiplayer setup
 
-## Architecture
+## Account and server requirements
 
-The browser client is hosted on GitHub Pages. The real-time server runs separately on Cloudflare Workers with a SQLite-backed Durable Object for each room. Durable Objects and WebSocket hibernation are available on Workers Free, subject to published quotas. See the [pricing guide](https://developers.cloudflare.com/durable-objects/platform/pricing/) and [WebSocket hibernation guide](https://developers.cloudflare.com/durable-objects/best-practices/websockets/).
+You do not need to create a Cloudflare, Supabase or Firebase account. You do not need to deploy a multiplayer server or configure an API key.
 
-Free usage is limited. Current documented Durable Object limits include 100,000 requests/day, 13,000 GB-s/day, 5 million SQL rows read/day, 100,000 rows written/day and 5 GB total SQL storage. If a Free-plan limit is exceeded, further operations of that type fail until the daily reset. Limits and pricing can change. Review Cloudflare's current pricing before launch. Do not promise unlimited free operation.
+Realm RPG uses Trystero 0.25.4 with its default Nostr discovery strategy. Trystero connects peers through public discovery relays, then uses WebRTC data channels for game traffic.
 
-## Prerequisites
+## Join a room
 
-- A Cloudflare account.
-- Node.js 20 or newer.
-- Wrangler CLI.
-- Access to this GitHub repository.
+1. Open the [Arcade game lobby](https://tanushgargjanuary-bot.github.io/arcade/).
+2. Open Realm RPG.
+3. Enter a display name.
+4. Share a room code with friends.
+5. Each player enters the same room code and selects **Join Realm**.
 
-## Deploy
+Room codes are not passwords. Anyone who knows a room code can try to join. Use a random room code if you do not want strangers to find the room easily. Do not use personal information in room codes.
 
-From the repository root:
+## How connections work
 
-    cd worker
-    npx wrangler login
-    npx wrangler deploy
+1. Trystero announces the room through public Nostr relays.
+2. Peers discover each other and exchange WebRTC connection details.
+3. Browsers establish direct WebRTC data channels where network conditions allow.
+4. Game messages then travel directly between connected peers.
 
-The first deployment creates the SQLite-backed Durable Object namespace through the migration in worker/wrangler.toml.
+Public relays are not operated by this project. They may be unavailable, rate-limit traffic or change policy. The project cannot guarantee their uptime.
 
-After deployment, copy the Worker URL. It should look like:
+## Network limitations
 
-    https://arcade-realm-api.<account-subdomain>.workers.dev
+Some networks block or restrict direct WebRTC connections. Those player pairs may need a TURN relay. Arcade does not configure a TURN provider by default. If two players cannot connect:
 
-Check:
+- Try another network, such as a mobile hotspot.
+- Disable restrictive VPN or firewall rules if safe to do so.
+- Try a different browser.
+- Check the browser console for Trystero connection errors.
+- If failures are repeatable across networks, a TURN service or a self-hosted TURN server may be needed. That can introduce an account, server or cost requirement.
 
-    curl https://arcade-realm-api.<account-subdomain>.workers.dev/health
+## Local development
 
-Expected response:
+Requires Node.js 20+ and Python 3.
 
-    {"ok":true,"service":"arcade-realm-api"}
+    npm install
+    npm test
+    npx playwright install chromium
+    npm run test:e2e
+    python -m http.server 8000
 
-## Configure the client
+Open http://localhost:8000 and visit Realm RPG.
 
-Edit src/multiplayer-config.js:
+The browser loads Trystero from esm.sh. A working internet connection is required for the library and public discovery network.
 
-    export const MULTIPLAYER_ENDPOINT = "https://arcade-realm-api.<account-subdomain>.workers.dev";
+## Provider and dependency updates
 
-Commit and push this change to main. GitHub Actions will run validation and deploy the static client.
+- Current provider: Trystero.
+- Pinned browser import: `https://esm.sh/trystero@0.25.4`.
+- Default discovery strategy: Nostr.
+- Transport: WebRTC data channels.
+- No API key or account is configured.
 
-## Allowed browser origins
+Review Trystero release notes before changing the pinned version. Trystero 0.25 introduced API changes. Test the exact release before upgrading.
 
-The Worker uses ALLOWED_ORIGINS in worker/wrangler.toml. The default value allows the production GitHub Pages origin:
+## Legacy Cloudflare implementation
 
-    https://tanushgargjanuary-bot.github.io
-
-For local browser testing, add the exact local origin to the comma-separated value, deploy the Worker, then remove the local origin before production use. Do not use a wildcard.
-
-## Verify real multiplayer
-
-1. Open the deployed Realm RPG page in two separate browser profiles.
-2. Enter different display names.
-3. Enter the same room code.
-4. Confirm both players appear in each other's player list and world.
-5. Move one player and confirm the other sees the new position.
-6. Send a chat message and confirm it appears in both sessions.
-7. Move close to the Moss Titan and attack.
-8. Confirm the shared boss HP changes in both sessions.
-9. Disconnect one browser and confirm the other sees the leave message.
-
-## Local Worker development
-
-Use Wrangler's local development server:
-
-    cd worker
-    npx wrangler dev
-
-Add the local site's exact origin to ALLOWED_ORIGINS in a local-only config before testing the WebSocket from the local site. Do not commit a local-only origin change.
-
-## Costs and controls
-
-- Use the Free plan first. Watch request, duration and SQLite usage in Cloudflare.
-- Durable Object WebSocket hibernation reduces idle duration use. The server uses the hibernation API.
-- Room capacity is capped at 20 connections.
-- Movement is rate-limited by server-side timing.
-- Chat is length-limited and rate-limited per connection.
-- This repository does not configure billing alerts or a spending cap. Configure account alerts yourself.
+The old Cloudflare Worker source remains under `worker/`. The current browser client does not use it. It is not required for deployment or gameplay. The old Wrangler setup guide has been superseded by this document.
 
 ## Rollback
 
-To disable multiplayer quickly, clear MULTIPLAYER_ENDPOINT in the static client and redeploy Pages. Solo games continue to work. To roll back the Worker, use Cloudflare's deployment controls or deploy a known-good Worker revision.
+To disable the P2P feature, remove the Realm RPG catalogue entry or revert the P2P client change. Solo games continue to work. Do not switch the client back to the legacy Worker without restoring its endpoint configuration and running its local integration tests.
