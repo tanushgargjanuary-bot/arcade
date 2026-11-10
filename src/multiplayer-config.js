@@ -1,2 +1,3 @@
-// Set this to the deployed Cloudflare Worker URL. Keep empty until deployment.
-export const MULTIPLAYER_ENDPOINT = "";
+// Trystero uses public peer-discovery relays. No project account or API key is needed.
+export const MULTIPLAYER_PROVIDER = "trystero";
+export const TRYSTERO_VERSION = "0.25.4";

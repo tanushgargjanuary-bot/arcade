@@ -2,13 +2,13 @@
 
 ## Product statement
 
-Arcade is a public browser-game portal. It combines short solo games with optional real-time shared game rooms. It must remain easy to open, easy to maintain and low-cost to operate.
+Arcade is a public browser-game portal. It combines short solo games with optional real-time shared rooms. It must remain easy to open, easy to maintain and low-cost to operate.
 
 ## Users
 
 - Visitors who want to play a short browser game without installing software.
 - Returning players who want their personal solo records saved in the same browser.
-- Friends who want to join the same multiplayer room and play together.
+- Friends who want to join the same room and play together without creating a backend account.
 
 ## Core requirements
 
@@ -26,19 +26,21 @@ Arcade is a public browser-game portal. It combines short solo games with option
 
 ### Multiplayer
 - Join a room using a room code and display name.
-- Show connected players in shared space.
-- Support server-broadcast movement and room chat.
-- Support one cooperative encounter with shared enemy health.
-- Reject invalid or oversized messages.
-- Keep authoritative shared state on the server.
-- Show clear setup or connection status if the server is unavailable.
+- Discover peers through Trystero's public Nostr strategy.
+- Establish WebRTC data channels where network conditions allow.
+- Show connected players in a shared space.
+- Support peer-to-peer room chat.
+- Support one cooperative encounter with shared enemy health coordinated by a room leader.
+- Validate message shapes and lengths on each client.
+- Show clear connection errors when discovery or WebRTC fails.
+- Do not require a user-created Cloudflare, Supabase or Firebase account.
 
 ## Quality requirements
 
 - Every meaningful feature has automated tests.
 - Pull requests run unit tests, syntax checks and browser tests.
-- Multiplayer changes include security and cost review.
-- Documentation describes the actual deployed state, not only the intended state.
+- Multiplayer changes include security and reliability review.
+- Documentation describes the actual architecture and its limits.
 - No player records or credentials are committed to the repository.
 
 ## Scope boundaries
@@ -46,24 +48,24 @@ Arcade is a public browser-game portal. It combines short solo games with option
 Included:
 - Static game client.
 - Local solo game progress.
-- Room-based real-time multiplayer prototype.
+- Room-based P2P multiplayer prototype.
 - Automated checks and project documentation.
 
 Not included in this phase:
-- Commercial game economy.
-- Account registration.
+- Trusted server authority or anti-cheat.
 - Persistent multiplayer characters.
-- Matchmaking.
+- Global matchmaking.
 - Global social network.
 - Voice chat.
 - Payments or ranked tournaments.
+- Guaranteed connection across restrictive NATs without TURN.
 
 ## Success measures
 
 - The lobby loads and filters the catalogue.
 - Solo games launch and work without a backend.
 - Local progress survives page reloads and can be exported/imported.
-- Two clients can join the same room and see each other.
+- Two clients can discover and connect to the same room.
 - Chat and shared boss health update across clients.
 - CI blocks broken changes before deployment.
 - A new maintainer can understand and run the project from the documentation alone.

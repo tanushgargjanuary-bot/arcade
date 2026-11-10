@@ -8,7 +8,7 @@ This file records decisions that affect the project's direction. Add a new entry
 
 **Reason:** The lobby and solo games do not need a server. This keeps hosting simple.
 
-**Consequence:** Real-time multiplayer requires a separate server. GitHub Pages cannot host WebSocket room logic.
+**Consequence:** The site cannot run server-side game logic. Multiplayer must use peer-to-peer networking or a separate service.
 
 ## ADR-002: Local-first solo progress
 
@@ -18,13 +18,13 @@ This file records decisions that affect the project's direction. Add a new entry
 
 **Consequence:** Data is browser-profile-specific. It does not sync automatically and can be lost if browser data is cleared.
 
-## ADR-003: Cloudflare Durable Objects for multiplayer rooms
+## ADR-003: Cloudflare Durable Objects for multiplayer rooms — superseded
 
-**Decision:** Use one SQLite-backed Durable Object per room and WebSockets for live updates.
+**Original decision:** Use one SQLite-backed Durable Object per room and WebSockets for live updates.
 
-**Reason:** A room needs one coordinated state owner and bidirectional updates. Durable Objects support this model and are available on the Workers Free plan with limits.
+**Reason at the time:** A room needs coordinated state and bidirectional updates.
 
-**Consequence:** The Worker needs a separate deployment. Usage is quota-bound. The client remains disabled until its endpoint is configured.
+**Outcome:** This required a separate Cloudflare account and Worker deployment. The user asked to avoid that setup. The previous implementation remains under `worker/` for reference and regression tests, but the current Realm client does not use it.
 
 ## ADR-004: Prototype identity instead of accounts
 
@@ -41,3 +41,16 @@ This file records decisions that affect the project's direction. Add a new entry
 **Reason:** Static source checks alone do not catch navigation or rendering failures.
 
 **Consequence:** CI takes longer and installs a browser, but catches more regressions before deployment.
+
+## ADR-006: Trystero and WebRTC for account-free multiplayer
+
+**Decision:** Use Trystero 0.25.4 with its default Nostr discovery strategy and WebRTC data channels.
+
+**Reason:** It allows browsers to discover and connect to each other without requiring the project owner to create a provider account or deploy a dedicated server.
+
+**Consequences:**
+- Public Nostr relays are external dependencies. The project cannot guarantee their uptime or policies.
+- WebRTC direct connections may fail on restrictive networks. TURN may be required.
+- A peer coordinates shared boss state. This is not trusted server authority.
+- Mesh connection cost grows with room size. Keep rooms small.
+- The project must test the exact pinned Trystero version before upgrades.

@@ -6,8 +6,8 @@
 - Prefer plain HTML, CSS and JavaScript unless a dependency has a clear benefit.
 - Keep solo player records local by default.
 - Keep player data out of Git commits.
-- Treat multiplayer clients as untrusted.
-- Do not claim a multiplayer feature is live until it passes a real two-client test.
+- Treat every multiplayer peer as untrusted.
+- Do not claim multiplayer reliability until it passes real multi-network tests.
 - Update the project knowledge base when behaviour, scope or architecture changes.
 
 ## Before changing code
@@ -33,13 +33,13 @@ Also test the changed game manually. Check desktop and mobile layouts, keyboard 
 
 ## Multiplayer changes
 
-- Validate all client messages on the server.
-- Keep authoritative shared state on the server.
-- Limit message size, frequency and room capacity.
-- Never trust a display name as an identity.
-- Do not expose secrets in frontend code.
-- Add tests for invalid, oversized and rapid messages.
-- Review Cloudflare usage and cost limits.
+- Treat peer messages as untrusted input.
+- Bound message lengths and validate message shapes.
+- Do not treat a room code or peer ID as authentication.
+- Document public relay and WebRTC network dependencies.
+- Test leader departure and reconnection.
+- Do not claim that peer-hosted state is tamper-proof.
+- Review privacy implications of public discovery relays.
 
 ## Pull requests
 
@@ -48,7 +48,7 @@ Include:
 - Design and architecture changes.
 - Tests run and their results.
 - Manual test steps.
-- Security and cost implications.
+- Security and operational implications.
 - Documentation updates.
 
 A pull request must pass CI before merge.

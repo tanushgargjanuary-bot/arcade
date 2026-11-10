@@ -4,42 +4,43 @@
 
 - Solo player data remains in localStorage.
 - Exported JSON files contain play history and should be treated as private.
-- The Worker has no user password or API secret in the browser.
+- The current multiplayer client has no account credentials or API keys.
 - The GitHub repository must not contain player data or private exports.
 
-## Multiplayer controls
+## P2P networking
 
-- Allowed browser origins are checked before room access.
-- Room IDs and display names use strict character and length rules.
-- Chat text is stripped of control characters and capped at 180 characters.
-- WebSocket payloads are capped at 2 KB.
-- Each room has a 20-connection limit.
-- Movement is bounded to the world and throttled.
-- Attacks require proximity and a cooldown.
-- Chat is rate-limited per connection.
-- Chat is rendered with text nodes, not HTML.
+- Trystero uses public Nostr relays for peer discovery and WebRTC signalling.
+- Game messages are sent directly between peers over WebRTC data channels after connection.
+- Room codes are public identifiers, not authentication secrets.
+- Display names are not verified identities.
+- Peer IDs identify temporary connections only.
+- The client validates basic message shapes and lengths. Peers can still send malicious or false state.
+- The room leader checks boss attack range and cooldown, but a malicious leader can falsify shared boss state.
+- The project does not control public relay availability, retention or privacy policies.
+- Some networks need TURN. No TURN relay is configured by default.
 
 ## Known risks
 
-- There is no authentication. Display names can be impersonated.
-- Origin checks are not authentication. Non-browser clients can forge Origin headers.
-- There is no moderation, mute, block or report workflow.
-- There is no persistent identity, inventory or secure XP account.
-- Client-side game visuals can be modified. The server owns shared boss HP, but this prototype is not a full anti-cheat system.
-- Denial-of-service protection is limited to basic message and connection limits.
-- Room state is ephemeral except for boss HP.
-- No automated penetration test has been run.
+- No account authentication or persistent identity.
+- No moderation, mute, block or report workflow.
+- No secure inventory, XP ledger or anti-cheat.
+- No robust consensus protocol for simultaneous boss attacks or leader migration.
+- No server-side rate limits. Client-side limits can be bypassed.
+- Public room codes can be guessed or shared.
+- Public discovery infrastructure can observe metadata such as room announcements and network connection information.
+- WebRTC connection failure is possible behind restrictive NATs and firewalls.
+- No automated penetration test or real-world multi-network reliability test has been completed.
 
 ## Before public growth
 
 Do not add trading, paid items, prizes or ranked competition until the project has:
-- A real authentication system.
-- Per-account authorization and session lifecycle.
-- Stronger rate limits and abuse controls.
+- A trusted authority or verifiable state protocol.
+- Authentication and authorization.
+- Strong abuse controls and server-side validation.
 - Chat moderation and reporting.
-- Server-side persistence and recovery.
-- Load and security testing.
-- A cost and abuse monitoring plan.
+- Persistence and recovery.
+- Load, security and network traversal tests.
+- A documented operational owner for relays or TURN infrastructure.
 
 ## Reporting
 

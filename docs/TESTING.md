@@ -2,15 +2,12 @@
 
 ## Node unit tests
 
-Run npm test.
+Run `npm test`.
 
 Covers:
 - Local progress storage and backup merge behaviour.
-- Room ID and player name validation.
-- Chat sanitization and message length.
-- Movement normalization and world boundaries.
-- Attack range and cooldown.
-- Multiplayer source guardrails and documentation presence.
+- Legacy Worker game-rule validation and boundaries.
+- Source guardrails for the Realm client and project documentation.
 
 ## Browser tests
 
@@ -20,12 +17,13 @@ Run:
     npx playwright install chromium
     npm run test:e2e
 
-Playwright starts a local static server and a local Wrangler Worker. It checks:
+Playwright checks:
 - Lobby rendering and category filtering.
 - Solo Snake launch and return navigation.
-- Realm RPG configuration warning and graceful no-server state.
-- Two separate browser contexts joining one real local Durable Object room, sharing presence, movement and chat.
-- Server-owned boss damage and player disconnect broadcasts.
+- Realm RPG page rendering and the account-free P2P entry flow.
+- The current client imports the pinned Trystero release and does not require a configured server endpoint.
+
+The Realm browser smoke test uses a local test double for the Trystero module. It does not prove that public Nostr relays or real WebRTC connections work.
 
 ## Syntax checks
 
@@ -34,23 +32,23 @@ Playwright starts a local static server and a local Wrangler Worker. It checks:
 
 ## CI
 
-GitHub Actions runs on pull requests and pushes to main. It installs dependencies, runs Node tests, checks JavaScript syntax, installs Chromium, and runs Playwright. The Pages deployment job runs only after validation succeeds and only for non-PR events.
+GitHub Actions runs on pull requests and pushes to main. It installs dependencies, runs Node tests, checks JavaScript syntax, installs Chromium and runs Playwright. The Pages deployment job runs only after validation succeeds and only for non-PR events.
 
 ## Manual release checks
 
-Before release, test:
-- Desktop and narrow mobile viewport.
-- Keyboard and touch controls for each game.
-- Browser console and network errors.
-- Export and import of local progress.
-- Worker health endpoint.
-- Two different browser sessions joining one room.
-- Player movement and position updates.
-- Chat in both directions.
-- Boss damage and XP award.
-- Room capacity and invalid room/name rejection.
-- Disconnect and reconnect behaviour.
+Before describing P2P multiplayer as reliable, test:
+- Two separate browsers on the same network.
+- Two browsers on different networks.
+- A mobile network and a Wi-Fi network.
+- Presence, movement, chat and boss health in both directions.
+- Room leader departure and leader handover.
+- A third player joining after the room is active.
+- Public relay failure and reconnect behaviour.
+- Browser console and WebRTC connection errors.
+- Desktop and narrow mobile layouts.
 
 ## Test limitations
 
-The browser suite starts Wrangler locally and exercises a real local Durable Object WebSocket room. It does not verify the deployed Cloudflare environment, production hibernation under load, storage migration between versions or high-concurrency behaviour. Those still need deployment and load tests.
+CI does not contact public Nostr relays or prove real WebRTC connectivity. The browser test mocks the Trystero API. Public relay uptime, NAT traversal, TURN fallback, high concurrency and adversarial peer behaviour require separate manual or dedicated integration testing.
+
+The legacy Cloudflare Worker remains in the repository and its rules remain covered by Node tests. It is not used by the current Realm client.

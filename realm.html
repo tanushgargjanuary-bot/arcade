@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#080b16">
-  <meta name="description" content="Explore a shared browser RPG. Meet players, chat and fight the Moss Titan.">
+  <meta name="description" content="Explore a peer-to-peer browser RPG. Meet players, chat and fight the Moss Titan.">
   <title>Realm RPG — Arcade</title>
   <link rel="icon" href="assets/favicon.svg">
   <link rel="stylesheet" href="app.css">
@@ -19,7 +19,7 @@
       <label>PLAYER NAME<input id="player-name" maxlength="16" value="Guest"></label>
       <label>ROOM CODE<input id="room-code" maxlength="24" value="lobby"></label>
       <button id="connect" class="button primary">JOIN REALM ↗</button>
-      <p id="connection-status" role="status">Checking multiplayer configuration…</p>
+      <p id="connection-status" role="status">Connecting to the peer network…</p>
     </section>
     <section class="realm-layout" id="realm-layout" hidden>
       <div class="realm-world-panel">
@@ -33,8 +33,8 @@
         <button id="leave" class="button quiet">LEAVE REALM</button>
       </aside>
     </section>
-    <section class="realm-notice"><strong>Early access:</strong> This is a small room-based co-op prototype. It has no accounts, persistent character inventory, matchmaking or anti-cheat rating. Use a unique nickname. Do not share personal information in chat.</section>
+    <section class="realm-notice"><strong>Early access:</strong> Realm uses peer-to-peer WebRTC connections with public discovery relays. No Arcade account or dedicated game server is required. Public room codes are not private. Players can impersonate names or manipulate game state. Some networks require a TURN relay and may fail to connect. Do not share personal information in chat.</section>
   </main>
-  <footer class="site-footer"><span>ARCADE / REALM RPG</span><span>REAL-TIME CO-OP PROTOTYPE</span><a href="https://github.com/tanushgargjanuary-bot/arcade">SOURCE CODE ↗</a></footer>
+  <footer class="site-footer"><span>ARCADE / REALM RPG</span><span>PEER-TO-PEER CO-OP PROTOTYPE</span><a href="https://github.com/tanushgargjanuary-bot/arcade">SOURCE CODE ↗</a></footer>
 </body>
 </html>
