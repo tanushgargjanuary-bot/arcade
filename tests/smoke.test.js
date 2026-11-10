@@ -31,7 +31,7 @@ test("catalogue has a handler for each embedded game", async () => {
   const data = await read("src/data.js");
   const games = await read("src/games.js");
   for (const id of ["snake", "2048", "minesweeper"]) {
-    assert.ok(data.includes('id:"' + id + '"') && games.includes('id==="' + id + '"'));
+    assert.ok(new RegExp('id:\\s*"' + id + '"').test(data) && games.includes('id==="' + id + '"'));
   }
   assert.ok(data.includes("neon-dodge"));
 });
