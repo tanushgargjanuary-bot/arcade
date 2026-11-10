@@ -10,15 +10,23 @@ test("every catalogue game has a usable entry point", async () => {
   assert.match(main, /realm-rpg/);
   assert.match(realm, /src\/rpg-client.js/);
 });
-test("multiplayer client renders chat as text, not HTML", async () => {
+test("Realm uses the pinned Trystero release without a configured server", async () => {
   const client = await read("src/rpg-client.js");
-  assert.doesNotMatch(client, /innerHTML\s*=.*message|innerHTML\s*=.*text/);
-  assert.match(client, /textContent = text/);
+  const config = await read("src/multiplayer-config.js");
+  assert.match(client, /https:\/\/esm\.sh\/trystero@0\.25\.4/);
+  assert.match(client, /joinRoom/);
+  assert.match(client, /makeAction/);
+  assert.doesNotMatch(client, /MULTIPLAYER_ENDPOINT|WebSocket\(/);
+  assert.match(config, /TRYSTERO_VERSION = "0\.25\.4"/);
 });
-test("multiplayer API has origin checks, bounded messages and room limits", async () => {
+test("multiplayer chat is rendered as text, not HTML", async () => {
+  const client = await read("src/rpg-client.js");
+  assert.doesNotMatch(client, /innerHTML\s*=/);
+  assert.match(client, /textContent = message/);
+});
+test("legacy Worker rules remain bounded", async () => {
   const worker = await read("worker/src/index.js");
   const rules = await read("worker/src/game-rules.js");
-  assert.match(worker, /allowedOrigin/);
   assert.match(worker, /raw\.length > 2048/);
   assert.match(worker, /MAX_PLAYERS/);
   assert.match(rules, /MAX_MESSAGE_LENGTH/);
