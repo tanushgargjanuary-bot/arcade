@@ -63,7 +63,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Commit a generated npm lockfile and use deterministic installs.
 - [x] Pin GitHub Actions to immutable commit SHAs.
 - [x] Add automated dependency update review.
-- [x] Configure CodeQL static analysis workflow; the current analysis run is pending.
+- [x] Configure CodeQL static analysis workflow; the first analysis completed successfully.
 - Add secret scanning.
 - Add accessibility and broken-link checks.
 - Require successful integration tests before deployment.
