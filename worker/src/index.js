@@ -19,9 +19,7 @@ export default {
     if (!validRoomId(roomId)) return json({ error: "Room IDs must be 3–24 letters, numbers, underscores or hyphens." }, 400);
     if (!name) return json({ error: "Name must be 2–16 letters, numbers, spaces, underscores or hyphens." }, 400);
     const id = env.REALM_ROOMS.idFromName(roomId.toLowerCase());
-    const headers = new Headers(request.headers);
-    headers.set("x-arcade-player-name", name);
-    return env.REALM_ROOMS.get(id).fetch(new Request(request, { headers }));
+    return env.REALM_ROOMS.get(id).fetch(request);
   }
 };
 
@@ -31,8 +29,9 @@ export class RealmRoom extends DurableObject {
     if (this.ctx.getWebSockets().length >= MAX_PLAYERS) return json({ error: "This room is full. Try another room." }, 429);
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
+    const url = new URL(request.url);
     const player = {
-      id: crypto.randomUUID(), name: request.headers.get("x-arcade-player-name") || "Guest",
+      id: crypto.randomUUID(), name: cleanPlayerName(url.searchParams.get("name")) || "Guest",
       x: 90 + Math.random() * 100, y: 100 + Math.random() * 260, hp: 100, xp: 0,
       lastMoveAt: 0, lastAttackAt: 0, lastChatAt: 0
     };
