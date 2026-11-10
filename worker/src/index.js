@@ -93,10 +93,10 @@ export class RealmRoom extends DurableObject {
       await this.broadcastState();
     }
   }
-  webSocketClose(ws) {
+  async webSocketClose(ws) {
     const player = ws.deserializeAttachment();
     if (player) this.broadcast({ type: "system", text: player.name + " left the realm." });
-    this.broadcastState();
+    await this.broadcastState();
   }
   webSocketError(ws) { try { ws.close(1011, "Connection error"); } catch { /* Closed socket. */ } }
 }
