@@ -10,7 +10,7 @@ Arcade has two data models:
 
 - Never commit player data, passwords, tokens or private backup files.
 - The current Realm client must not contain provider API keys or privileged credentials.
-- Treat all browser and peer input as untrusted.
+- Treat all browser input as untrusted, including peer messages.
 - Treat display names and peer IDs as temporary labels, not verified identities.
 - Do not use local scores or peer-hosted multiplayer state for prizes, payments or ranked competition.
 - Review [docs/SECURITY.md](docs/SECURITY.md) before changing the multiplayer protocol.
