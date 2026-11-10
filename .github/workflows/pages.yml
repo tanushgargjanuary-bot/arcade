@@ -30,12 +30,6 @@ jobs:
           package-manager-cache: false
       - name: Install pinned test dependencies
         run: npm install --no-audit --no-fund
-      - name: Capture generated npm lockfile for bootstrap
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: npm-lockfile-bootstrap
-          path: package-lock.json
-          retention-days: 1
       - name: Check dependency advisories
         run: npm audit --audit-level=high
       - name: Run Node test suite
