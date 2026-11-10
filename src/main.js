@@ -51,6 +51,7 @@ function cards() {
 
 function openGame(id) {
   if (id === "neon-dodge") { location.href = "./neon-dodge.html"; return; }
+  if (id === "realm-rpg") { location.href = "./realm.html"; return; }
   location.hash = "/game/" + id;
 }
 
