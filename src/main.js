@@ -79,7 +79,7 @@ function exportBackup() {
   link.href = url;
   link.download = "arcade-progress-backup.json";
   link.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function importBackup(event) {
