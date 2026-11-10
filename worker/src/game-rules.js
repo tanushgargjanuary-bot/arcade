@@ -8,6 +8,9 @@ export const ATTACK_COOLDOWN_MS = 650;
 export const CHAT_WINDOW_MS = 10000;
 export const MAX_CHAT_PER_WINDOW = 5;
 export const MAX_INVALID_MESSAGES = 5;
+export const MESSAGE_WINDOW_MS = 10000;
+export const MAX_MESSAGES_PER_WINDOW = 240;
+export const ROOM_IDLE_TTL_MS = 60000;
 export const WORLD = Object.freeze({ width: 760, height: 480, playerRadius: 12, moveStep: 18, enemyRadius: 24 });
 
 const ALLOWED_KEYS = Object.freeze({
