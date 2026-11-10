@@ -23,7 +23,7 @@ let presenceAction = null;
 let chatAction = null;
 let attackAction = null;
 let stateAction = null;
-let stateVersion = Date.now();
+let stateVersion = 0;
 let peerAttackTimes = new Map();
 let chatTimes = [];
 
@@ -170,7 +170,9 @@ function connect() {
     };
     room.onPeerJoin = (peerId) => {
       sendPresence(peerId);
-      if (hostId() === selfId) publishState(peerId);
+      // Every peer can provide a snapshot to a newcomer. The newcomer may
+      // itself become the elected leader, so the old leader is not special here.
+      stateAction.send(snapshot(), { target: peerId });
       addChat("Realm", "A player connected.", true);
       updateHud();
     };
