@@ -25,6 +25,7 @@ Playwright starts a local static server and a local Wrangler Worker. It checks:
 - Solo Snake launch and return navigation.
 - Realm RPG configuration warning and graceful no-server state.
 - Two separate browser contexts joining one real local Durable Object room, sharing presence, movement and chat.
+- Server-owned boss damage and player disconnect broadcasts.
 
 ## Syntax checks
 
@@ -52,4 +53,4 @@ Before release, test:
 
 ## Test limitations
 
-The current automated browser suite tests the static client. It does not start a Cloudflare Durable Object runtime. Server rule tests run in Node, but WebSocket lifecycle, hibernation, storage migration and concurrent room behaviour still need Cloudflare integration tests.
+The browser suite starts Wrangler locally and exercises a real local Durable Object WebSocket room. It does not verify the deployed Cloudflare environment, production hibernation under load, storage migration between versions or high-concurrency behaviour. Those still need deployment and load tests.
