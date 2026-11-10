@@ -10,7 +10,6 @@ Thumbs.db
 .tmp/
 # Node.js and browser test output
 node_modules/
-package-lock.json
 playwright-report/
 test-results/
 .wrangler/
