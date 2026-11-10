@@ -37,6 +37,16 @@ test("server validates message schemas, size, origin and rate limits", async () 
   assert.match(rules, /Object\.keys\(message\)/);
 });
 
+test("public HTML pages ship a restrictive content security policy", async () => {
+  for (const path of ["index.html", "realm.html", "neon-dodge.html"]) {
+    const html = await read(path);
+    assert.match(html, /Content-Security-Policy/);
+    assert.match(html, /object-src 'none'/);
+    assert.match(html, /script-src 'self'/);
+    assert.doesNotMatch(html, /unsafe-eval/);
+  }
+});
+
 test("multiplayer chat is rendered as text, not HTML", async () => {
   const client = await read("src/rpg-client.js");
   assert.doesNotMatch(client, /innerHTML\s*=/);
