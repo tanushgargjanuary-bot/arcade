@@ -13,7 +13,7 @@ const MAX_CHAT_LINES = 80;
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
 
 let socket = null;
-let roomCode = "lobby";
+let roomCode = "";
 let name = "";
 let playerId = null;
 let players = new Map();
@@ -34,6 +34,16 @@ let intentionalLeave = false;
 let joinedOnce = false;
 
 function setStatus(message) { status.textContent = message; }
+
+function generateRoomCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return "r-" + [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+const requestedRoomCode = new URLSearchParams(window.location.search).get("room");
+$("#room-code").value = requestedRoomCode && /^[a-zA-Z0-9_-]{8,24}$/.test(requestedRoomCode)
+  ? requestedRoomCode
+  : generateRoomCode();
 
 function addChat(playerName, message, system = false) {
   const line = document.createElement("div");
@@ -276,8 +286,8 @@ function connect() {
   if (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) return;
   name = $("#player-name").value.trim();
   roomCode = $("#room-code").value.trim();
-  if (!/^[a-zA-Z0-9_-]{3,24}$/.test(roomCode)) {
-    setStatus("Room code must be 3–24 letters, numbers, underscores or hyphens.");
+  if (!/^[a-zA-Z0-9_-]{8,24}$/.test(roomCode)) {
+    setStatus("Room code must be 8–24 letters, numbers, underscores or hyphens.");
     return;
   }
   if (!/^[\p{L}\p{N} _-]{2,16}$/u.test(name)) {
@@ -359,6 +369,21 @@ function drawWorld() {
 }
 
 $("#connect").addEventListener("click", connect);
+$("#copy-invite").addEventListener("click", async () => {
+  const code = $("#room-code").value.trim();
+  if (!/^[a-zA-Z0-9_-]{8,24}$/.test(code)) {
+    setStatus("Enter a valid 8–24 character room code first.");
+    return;
+  }
+  const invite = new URL("realm.html", window.location.href);
+  invite.searchParams.set("room", code);
+  try {
+    await navigator.clipboard.writeText(invite.href);
+    setStatus("Invite link copied. Share it only with people you trust.");
+  } catch {
+    setStatus("Copy is unavailable. Share this room code: " + code);
+  }
+});
 $("#leave").addEventListener("click", leave);
 $("#chat-form").addEventListener("submit", (event) => {
   event.preventDefault();
