@@ -40,6 +40,7 @@ The current defaults are designed for small rooms:
 - Server movement acceptance is capped at approximately 11 per second.
 - Chat is limited to 5 messages per player per 10 seconds.
 - Total inbound messages are bounded per connection.
+- Room connection attempts are limited to approximately 30 per IP per minute per Cloudflare location.
 - The Durable Object uses the WebSocket Hibernation API. It has no permanent timer loop.
 
 Cloudflare's published Durable Objects Free plan limits currently include 100,000 requests per day and 13,000 GB-seconds per day. Incoming WebSocket messages use a 20:1 billing ratio; outgoing WebSocket messages are not billed as requests. Free-plan operations can fail after a daily limit is reached. Check the [official pricing and limits](https://developers.cloudflare.com/durable-objects/platform/pricing/) before increasing room size or update frequency. These limits can change.
