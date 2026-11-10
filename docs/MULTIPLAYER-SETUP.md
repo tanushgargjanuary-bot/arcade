@@ -15,11 +15,14 @@ The authoritative game server runs on Cloudflare Workers and Durable Objects. Th
 
 1. Create or sign in to a Cloudflare account.
 2. Install Node.js 22 or later.
-3. From the repository root, run:
+3. From the repository root, install the pinned tools and authenticate:
 
-       cd worker
+       npm install
        npx wrangler login
-       npx wrangler deploy
+
+4. Deploy the Worker:
+
+       npx wrangler deploy --config worker/wrangler.toml
 
 4. Copy the deployed Worker origin. It will look like:
 
