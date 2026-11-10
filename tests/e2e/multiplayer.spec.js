@@ -19,7 +19,7 @@ async function createPlayer(browser, displayName) {
   return { context, page };
 }
 
-test("two real browser clients share authoritative presence, movement, chat and room state", async ({ browser }) => {
+test("two browsers share server-authoritative presence, movement, chat and leave state", async ({ browser }) => {
   const first = await createPlayer(browser, "Alpha");
   const second = await createPlayer(browser, "Beta");
   const { page: alpha } = first;
@@ -33,6 +33,9 @@ test("two real browser clients share authoritative presence, movement, chat and 
   await alpha.locator("#chat-input").fill("server checked message");
   await alpha.locator("#chat-form button").click();
   await expect(beta.locator("#chat-log")).toContainText("Alpha: server checked message");
+
+  await alpha.keyboard.press("Space");
+  await expect(alpha.locator("#chat-log")).toContainText("Move closer to the Moss Titan.");
 
   const alphaEntry = beta.locator('#players-list li').filter({ hasText: "Alpha" });
   const beforeX = Number(await alphaEntry.getAttribute("data-x"));
@@ -48,6 +51,42 @@ test("two real browser clients share authoritative presence, movement, chat and 
   await second.context.close();
 });
 
+test("server rejects spoofed state messages and limits chat", async ({ browser }) => {
+  const player = await createPlayer(browser, "Owner");
+  const { page } = player;
+
+  const spoofResult = await page.evaluate((workerOrigin) => new Promise((resolve, reject) => {
+    const url = new URL("/room", workerOrigin);
+    url.protocol = "ws:";
+    url.searchParams.set("room", "robust-spoof-room");
+    url.searchParams.set("name", "BadActor");
+    const ws = new WebSocket(url);
+    const timeout = setTimeout(() => reject(new Error("No server response")), 5000);
+    ws.addEventListener("message", (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === "welcome") {
+        ws.send(JSON.stringify({ type: "attack", damage: 999999, xp: 999999 }));
+      } else if (message.type === "error") {
+        clearTimeout(timeout);
+        ws.close();
+        resolve(message.code);
+      }
+    });
+    ws.addEventListener("error", () => {
+      clearTimeout(timeout);
+      reject(new Error("Raw test socket failed"));
+    });
+  }), WORKER_ORIGIN);
+  expect(spoofResult).toBe("invalid_message");
+
+  for (let index = 0; index < 6; index += 1) {
+    await page.locator("#chat-input").fill("rate test " + index);
+    await page.locator("#chat-form button").click();
+  }
+  await expect(page.locator("#chat-log")).toContainText("Chat limit reached.");
+  await player.context.close();
+});
+
 test("server rejects missing origins and non-WebSocket room requests", async ({ request }) => {
   const health = await request.get(WORKER_ORIGIN + "/health");
   expect(health.ok()).toBeTruthy();
@@ -60,4 +99,11 @@ test("server rejects missing origins and non-WebSocket room requests", async ({ 
     headers: { Origin: "http://127.0.0.1:4173" }
   });
   expect(noUpgrade.status()).toBe(426);
+});
+
+test("Realm explains when the project server endpoint is not configured", async ({ page }) => {
+  await page.goto("/realm.html");
+  await expect(page.locator("#connection-status")).toContainText("server is not configured");
+  await page.getByRole("button", { name: /join realm/i }).click();
+  await expect(page.locator("#connection-status")).toContainText("server is not configured");
 });
