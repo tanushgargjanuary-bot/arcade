@@ -1,15 +1,17 @@
 # Multiplayer setup
 
+> **Current state: NOT DEPLOYED.** The Worker is implemented but the project is paused. The client endpoint is empty. The instructions below are for a deliberate future restart, not evidence of a live service.
+
 ## Player requirements
 
-Players do not need an account, password, API key or Cloudflare login.
+When multiplayer is deployed, players will not need an account, password, API key or Cloudflare login.
 
-They need:
+They will need:
 - a modern browser;
 - a display name;
 - a room code shared by the group.
 
-## Project owner: deploy the server once
+## Project owner: deploy the server when resuming
 
 The authoritative game server runs on Cloudflare Workers and Durable Objects. The project owner needs a Cloudflare account to deploy and operate it. This is an infrastructure account. It does not create accounts for players.
 
@@ -39,9 +41,11 @@ The authoritative game server runs on Cloudflare Workers and Durable Objects. Th
 
 The endpoint is public configuration, not a secret. Do not put API tokens in the browser code.
 
-Cloudflare plan limits and availability can change. The current Durable Objects Free plan lists 100,000 requests and 13,000 GB-seconds per day. Incoming WebSocket messages count at a 20:1 billing ratio. Free-plan operations fail when a daily limit is exceeded. See the [official pricing page](https://developers.cloudflare.com/durable-objects/platform/pricing/). The current 10 Hz movement cap and 16-player room limit are deliberate cost controls. The project does not promise unlimited free hosting.
+Cloudflare plan limits and availability can change. Check the [official pricing page](https://developers.cloudflare.com/durable-objects/platform/pricing/) before deployment. The current 10 Hz movement cap and 16-player room limit are deliberate cost controls. The project does not promise unlimited free hosting.
 
 ## Join a room
+
+After deployment and production validation:
 
 1. Open the [Arcade game lobby](https://tanushgargjanuary-bot.github.io/arcade/).
 2. Open Realm RPG.
