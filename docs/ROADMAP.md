@@ -8,7 +8,7 @@
 - [x] Realm RPG client and Cloudflare Durable Object WebSocket server source.
 - [x] Shared player presence, movement, room chat and cooperative boss combat.
 - [x] Room/name/chat validation, bounded movement, attack range/cooldown and room capacity.
-- [x] Node unit tests and Playwright browser tests.
+- [x] Node unit tests and Playwright browser tests, including a two-client local Durable Object integration test.
 - [x] Project history, game design, testing, multiplayer setup, operations and security documentation.
 
 ## Required before multiplayer is live
@@ -21,7 +21,7 @@
 
 ## Next engineering priorities
 
-1. Add Durable Object integration tests with the Cloudflare test runtime.
+1. Add production-like Durable Object lifecycle, hibernation and migration tests.
 2. Add reconnection handling and clean player lifecycle behaviour.
 3. Add mobile virtual controls and accessibility.
 4. Add persistent player identity only after choosing an authentication model.
