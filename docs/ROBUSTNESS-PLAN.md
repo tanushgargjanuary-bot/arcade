@@ -24,6 +24,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Server-side movement, range, cooldown and XP calculations.
 - Per-connection message, movement and chat budgets.
 - Room capacity limit.
+- Approximate per-IP room connection limit at the Cloudflare edge.
 - Origin allowlist.
 - Malformed-message strike limit.
 - WebSocket heartbeat and bounded reconnect.
@@ -76,7 +77,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 ## Risks that remain
 
 - Anonymous players can impersonate names and create multiple sessions.
-- There is no global IP reputation or persistent ban system.
+- The per-IP edge limiter is approximate and local to each Cloudflare location. There is no strict global IP reputation or persistent ban system.
 - There is no human moderation workflow.
 - Temporary XP is lost on disconnect.
 - Cloudflare plan limits and availability are outside the repository's control.
