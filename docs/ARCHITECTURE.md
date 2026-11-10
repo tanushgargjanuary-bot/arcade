@@ -2,53 +2,52 @@
 
 ## System overview
 
-    Browser
-      ├── GitHub Pages: lobby, solo games, Realm RPG UI
-      ├── localStorage: solo scores and play history
-      └── WebSocket
-             |
-       Cloudflare Worker
-             |
-       Durable Object namespace
-             |
-       One object per room code
-             |
-       Shared player list + boss health
+    Browser A ── WebRTC data channel ── Browser B
+         \             |             /
+          \       Trystero discovery /
+           └──── public Nostr relays ┘
+
+- GitHub Pages serves the static lobby and games.
+- Trystero uses public discovery relays to help peers find each other.
+- WebRTC data channels carry game messages directly between peers.
+- One peer is elected as room leader by sorting the connected peer IDs. It coordinates shared boss damage and publishes boss state.
+- There is no Arcade-owned multiplayer server in the current client path.
 
 ## Client
 
 - index.html: lobby shell.
 - app.css: lobby and solo-game styles.
-- src/main.js: lobby, catalogue filters, solo game routes and backup actions.
+- src/main.js: lobby, catalogue filters, solo-game routes and backup actions.
 - src/data.js: game catalogue.
 - src/games.js: Snake, 2048 and Minesweeper.
-- src/storage.js: local progress and JSON backup validation.
+- src/storage.js: solo progress and JSON backup validation.
 - neon-dodge.html, game.js, styles.css: standalone Neon Dodge.
-- realm.html, realm.css, src/rpg-client.js: multiplayer RPG page and WebSocket client.
-- src/multiplayer-config.js: public Worker URL. This is configuration, not a secret.
+- realm.html, realm.css, src/rpg-client.js: Realm RPG page, peer connections and game protocol.
+- src/multiplayer-config.js: documents the Trystero provider and pinned version.
 
-## Multiplayer server
+## Peer discovery and transport
 
-- worker/src/index.js: health endpoint, WebSocket upgrade routing and room Durable Object.
-- worker/src/game-rules.js: validation and deterministic game rules.
-- worker/wrangler.toml: Worker name, Durable Object binding, SQLite migration and allowed browser origin.
-- RealmRoom: one Durable Object per room ID. It owns live connections, player state and shared boss state.
+- Library: Trystero 0.25.4, loaded from esm.sh.
+- Strategy: Trystero's default Nostr discovery strategy.
+- Discovery: public Nostr relays exchange the signalling data needed to establish peers.
+- Transport: WebRTC data channels. Application data is sent peer-to-peer after connection.
+- Identity: Trystero peer IDs are temporary connection identifiers. They are not verified user identities.
+- Configuration: the app uses a fixed public app ID and user-selected room code. No API key or user account is required.
 
-The Worker uses the WebSocket Hibernation API. Each connected socket stores its player state in a serialized attachment. Shared enemy state is stored in Durable Object SQLite-backed storage.
+The public discovery network is an external dependency. Its uptime, rate limits and relay policies are outside this repository's control. Some network pairs may require TURN. No TURN service is configured by default.
 
-## Multiplayer message contract
+## Multiplayer protocol
 
-Client to server:
-- move with dx and dy: movement request. Server clamps position and applies a fixed step.
-- chat with text: server removes control characters and caps message length.
-- attack: server checks range and cooldown before damaging the shared boss.
-- leave: marks the player inactive, broadcasts the departure and closes the socket.
+Client to peers:
+- presence: display name, current position and temporary XP.
+- chat: display name and bounded text.
+- attack: request for the room leader to validate and apply boss damage.
 
-Server to client:
-- welcome: assigned player ID, own player state, current players and boss.
-- state: authoritative player positions and shared boss health.
-- chat: accepted room message.
-- system: join, leave and boss defeat notices.
+Room leader to peers:
+- state: boss health and the current player snapshot.
+- system messages: join, leave and boss defeat notices are rendered locally.
+
+The room leader is selected as the lexicographically smallest connected peer ID, including the local peer ID. On leader departure, the remaining peers elect a new leader. Each peer keeps the latest observed boss snapshot so the new leader can continue from its local copy. This is best-effort migration, not a consensus protocol.
 
 ## Data ownership
 
@@ -56,24 +55,27 @@ Server to client:
 |---|---|---|
 | Solo game records | Browser localStorage | Until browser/site data is cleared |
 | Solo backup | User-downloaded JSON | User-managed |
-| Multiplayer live players | Durable Object socket attachments | Lifetime of each connection |
-| Shared boss HP | Durable Object storage | Persists between connections |
-| Multiplayer XP | Player socket attachment | Lost when that player disconnects |
+| Multiplayer presence | Connected browser peers | Connection lifetime |
+| Shared boss HP | Peer-local replicated state | Room lifetime; best-effort handover |
+| Multiplayer XP | Peer-local player state | Lost when room closes |
 | Chat history | Connected clients only | Not persisted |
+| Peer discovery metadata | Public Nostr relays | Controlled by external relay operators |
 
-## Trust boundaries
+## Trust boundaries and limitations
 
-- The browser is untrusted. It can change local scores and send arbitrary messages.
-- The Worker validates message type, size, room, name, chat, movement, attack range and cooldown.
-- Player names are not authenticated identities. A player can reuse another player's display name.
-- Origin checks are not user authentication and can be bypassed by non-browser clients.
-- The server does not yet persist player accounts, XP or inventory.
+- Every browser is untrusted. A peer can send false positions, names, XP or messages.
+- The elected room leader checks attack range and cooldown. A malicious leader can still alter boss state.
+- There is no account authentication, moderation, mute, block or report workflow.
+- A room code is a namespace, not a password. Anyone who knows it can attempt to join.
+- Public relays can observe discovery metadata. Game data is sent over WebRTC peer connections, not through the discovery relay after connection.
+- WebRTC direct connectivity is not guaranteed on every network. A TURN relay may be required.
+- No persistent character profile, inventory or secure XP ledger exists.
 - Do not use this prototype for prizes, payments or competitive rankings.
 
-## Deployment boundaries
+## Legacy backend
 
-GitHub Pages deploys only the static site. The Worker must be deployed separately with Wrangler. After deployment, set the Worker URL in src/multiplayer-config.js and push the change to main.
+The previous Cloudflare Worker and Durable Object implementation remains under `worker/`. The current Realm client does not connect to it. It is retained for reference and regression tests while the P2P path is evaluated. Do not deploy it as a requirement for current Realm gameplay.
 
 ## Scaling notes
 
-A room is a single coordination point. Keep room size capped. Do not add high-frequency physics simulation or global chat without load tests, abuse controls and cost estimates. Use WebSocket hibernation to reduce idle duration charges.
+WebRTC mesh connections grow with the number of peers. Keep rooms small. The current prototype is designed for small friend groups, not MMO-scale rooms. Do not raise room size without testing browser CPU, connection count, relay reliability and host migration.
