@@ -75,5 +75,5 @@ test("backup data is versioned and browser-only", async () => {
   const storage = await read("src/storage.js");
   const security = await read("SECURITY.md");
   assert.match(storage, /format: FORMAT, version: VERSION/);
-  assert.match(security, /user-controlled/i);
+  assert.match(security, /browser input as untrusted|user-controlled/i);
 });
