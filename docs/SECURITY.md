@@ -35,7 +35,7 @@ Room codes are not passwords. Names can be impersonated. A user can create multi
 
 ## Remaining risks
 
-- No global IP reputation or global room-creation rate limit.
+- The per-IP edge limiter is approximate and local to each Cloudflare location. There is no strict global connection quota or IP reputation system.
 - No chat moderation, mute, block or report tools.
 - No persistent bans or verified identities.
 - No persistent character inventory or XP.
