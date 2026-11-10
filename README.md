@@ -36,7 +36,7 @@ Realm RPG uses temporary server-generated connection IDs. It does not create pla
 - Multiplayer: Cloudflare Workers, Durable Objects and WebSockets.
 - Tests: Node.js unit tests and Playwright browser tests against a local Wrangler Durable Object.
 - Dependency audit: npm audit in CI.
-- Multiplayer defaults: 16 players per room and 10 movement updates per second.
+- Multiplayer defaults: 16 players per room, 10 movement updates per second and bounded chat.
 
 ## Development
 
