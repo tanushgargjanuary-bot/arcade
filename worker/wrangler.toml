@@ -12,3 +12,11 @@ new_sqlite_classes = ["RealmRoom"]
 
 [vars]
 ALLOWED_ORIGINS = "https://tanushgargjanuary-bot.github.io,http://127.0.0.1:4173"
+
+[[ratelimits]]
+name = "ROOM_CONNECT_LIMIT"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 30
+period = 60
