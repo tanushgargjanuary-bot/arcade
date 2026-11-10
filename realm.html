@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b16">
+  <meta name="description" content="Explore a shared browser RPG. Meet players, chat and fight the Moss Titan.">
+  <title>Realm RPG — Arcade</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="realm.css">
+  <script type="module" src="src/rpg-client.js"></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="./">◈ ARCADE<span>.</span></a><nav><a href="./#library">Games</a><a href="./#profile">My stats</a></nav><a class="button quiet" href="./">← LOBBY</a></header>
+  <main class="app-main realm-main">
+    <section class="realm-heading"><p class="eyebrow">MULTIPLAYER / CO-OP RPG</p><h1>Enter the <span>Realm.</span></h1><p>Meet other players. Explore together. Defeat the Moss Titan.</p></section>
+    <section class="realm-join" id="join-panel">
+      <label>PLAYER NAME<input id="player-name" maxlength="16" value="Guest"></label>
+      <label>ROOM CODE<input id="room-code" maxlength="24" value="lobby"></label>
+      <button id="connect" class="button primary">JOIN REALM ↗</button>
+      <p id="connection-status" role="status">Checking multiplayer configuration…</p>
+    </section>
+    <section class="realm-layout" id="realm-layout" hidden>
+      <div class="realm-world-panel">
+        <div class="realm-toolbar"><span id="realm-label">ROOM: LOBBY</span><span id="player-count">0 PLAYERS</span><span id="player-xp">XP 0</span></div>
+        <canvas id="realm-world" width="760" height="480" aria-label="Shared RPG world. Use WASD or arrow keys to move."></canvas>
+        <div class="realm-controls"><span>MOVE: WASD / ARROWS</span><span>ATTACK: SPACE</span><span>CHAT: TYPE BELOW</span></div>
+      </div>
+      <aside class="realm-side">
+        <section class="realm-card"><h2>Players online</h2><ul id="players-list"></ul></section>
+        <section class="realm-card"><h2>Realm chat</h2><div id="chat-log" aria-live="polite"></div><form id="chat-form"><input id="chat-input" maxlength="180" placeholder="Say something…" autocomplete="off" aria-label="Chat message"><button class="button" type="submit">SEND</button></form></section>
+        <button id="leave" class="button quiet">LEAVE REALM</button>
+      </aside>
+    </section>
+    <section class="realm-notice"><strong>Early access:</strong> This is a small room-based co-op prototype. It has no accounts, persistent character inventory, matchmaking or anti-cheat rating. Use a unique nickname. Do not share personal information in chat.</section>
+  </main>
+  <footer class="site-footer"><span>ARCADE / REALM RPG</span><span>REAL-TIME CO-OP PROTOTYPE</span><a href="https://github.com/tanushgargjanuary-bot/arcade">SOURCE CODE ↗</a></footer>
+</body>
+</html>
