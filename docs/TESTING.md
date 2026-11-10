@@ -33,6 +33,7 @@ Playwright starts a local static server and a local Wrangler Worker with Durable
 - chat is attributed by the server;
 - movement is validated and synchronized by the server;
 - explicit leave removes the player;
+- generated room codes use cryptographic randomness and invite links restore the room;
 - the health route responds;
 - requests without an allowed origin are rejected;
 - non-WebSocket room requests are rejected.
@@ -53,6 +54,7 @@ Before public growth, test:
 - reconnect after a browser sleeps and resumes;
 - full-room rejection;
 - rapid movement, chat and attack requests;
+- spoofed state fields, malformed frames and invalid room codes;
 - malformed JSON and oversized frames;
 - simultaneous attacks near the boss;
 - room cleanup after all players leave;
