@@ -368,9 +368,8 @@ function drawWorld() {
   animationId = requestAnimationFrame(drawWorld);
 }
 
-$("#connect").addEventListener("click", connect);
-$("#copy-invite").addEventListener("click", async () => {
-  const code = $("#room-code").value.trim();
+async function copyInvite() {
+  const code = (roomCode || $("#room-code").value).trim();
   if (!/^[a-zA-Z0-9_-]{8,24}$/.test(code)) {
     setStatus("Enter a valid 8–24 character room code first.");
     return;
@@ -383,7 +382,11 @@ $("#copy-invite").addEventListener("click", async () => {
   } catch {
     setStatus("Copy is unavailable. Share this room code: " + code);
   }
-});
+}
+
+$("#connect").addEventListener("click", connect);
+$("#copy-invite").addEventListener("click", copyInvite);
+$("#copy-invite-active").addEventListener("click", copyInvite);
 $("#leave").addEventListener("click", leave);
 $("#chat-form").addEventListener("submit", (event) => {
   event.preventDefault();
