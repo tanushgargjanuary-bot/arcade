@@ -26,6 +26,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Room capacity limit.
 - Approximate per-IP room connection limit at the Cloudflare edge.
 - Origin allowlist.
+- Restrictive Content Security Policy on all public HTML entry points.
 - Malformed-message strike limit.
 - WebSocket heartbeat and bounded reconnect.
 - Empty-room state cleanup.
@@ -62,7 +63,8 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Commit a generated npm lockfile and use deterministic installs.
 - Pin GitHub Actions to immutable commit SHAs.
 - Add automated dependency update review.
-- Add static analysis and secret scanning.
+- CodeQL static analysis workflow added; successful analysis evidence is still pending.
+- Add secret scanning.
 - Add accessibility and broken-link checks.
 - Require successful integration tests before deployment.
 
