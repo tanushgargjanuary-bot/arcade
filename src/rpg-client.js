@@ -1,4 +1,4 @@
-import { joinRoom, selfId } from "https://esm.sh/trystero@0.25.4";
+import { MULTIPLAYER_ENDPOINT } from "./multiplayer-config.js";
 
 const $ = (selector) => document.querySelector(selector);
 const status = $("#connection-status");
@@ -7,62 +7,98 @@ const layout = $("#realm-layout");
 const canvas = $("#realm-world");
 const ctx = canvas.getContext("2d");
 const keys = new Set();
-const WORLD = { width: 760, height: 480, radius: 12, step: 18 };
-const APP_ID = "tanushgarg.arcade.realm.v1";
-let room = null;
+const WORLD = { width: 760, height: 480, radius: 12 };
+const MAX_PLAYERS = 16;
+const MAX_CHAT_LINES = 80;
+const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
+
+let socket = null;
 let roomCode = "lobby";
 let name = "";
+let playerId = null;
 let players = new Map();
 let enemy = { id: "moss-titan", name: "Moss Titan", x: 570, y: 240, hp: 100, maxHp: 100 };
 let xp = 0;
-let lastMove = 0;
-let lastAttack = 0;
+let localX = 120;
+let localY = 180;
 let moveTimer = null;
 let animationId = 0;
-let presenceAction = null;
-let chatAction = null;
-let attackAction = null;
-let stateAction = null;
-let stateVersion = 0;
-let peerAttackTimes = new Map();
-let chatTimes = [];
+let heartbeatTimer = null;
+let connectTimeout = null;
+let reconnectTimer = null;
+let reconnectAttempt = 0;
+let lastPongAt = 0;
+let lastMoveAt = 0;
+let lastAttackAt = 0;
+let intentionalLeave = false;
+let joinedOnce = false;
 
 function setStatus(message) { status.textContent = message; }
+
 function addChat(playerName, message, system = false) {
   const line = document.createElement("div");
   line.className = "chat-line" + (system ? " system" : "");
-  if (system) line.textContent = message;
-  else {
+  if (system) {
+    line.textContent = message;
+  } else {
     const label = document.createElement("strong");
     label.textContent = playerName + ": ";
     line.append(label, document.createTextNode(message));
   }
   $("#chat-log").append(line);
   $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
-  while ($("#chat-log").children.length > 80) $("#chat-log").firstElementChild.remove();
+  while ($("#chat-log").children.length > MAX_CHAT_LINES) $("#chat-log").firstElementChild.remove();
 }
-function localPlayer() {
-  return { id: selfId, name, x: localX, y: localY, hp: 100, xp };
+
+function send(payload) {
+  if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+  try {
+    socket.send(JSON.stringify(payload));
+    return true;
+  } catch {
+    return false;
+  }
 }
-let localX = 120;
-let localY = 180;
-function hostId() {
-  return [selfId, ...Object.keys(room?.getPeers?.() || {})].sort()[0];
+
+function validPlayer(player) {
+  return player && typeof player.id === "string" &&
+    typeof player.name === "string" && player.name.length <= 16 &&
+    Number.isFinite(player.x) && Number.isFinite(player.y) &&
+    Number.isFinite(player.hp) && Number.isFinite(player.xp);
 }
-function sendPresence(target) {
-  if (!presenceAction) return;
-  presenceAction.send(localPlayer(), target ? { target } : undefined);
+
+function applyPlayers(list) {
+  if (!Array.isArray(list) || list.length > MAX_PLAYERS) return;
+  const next = new Map();
+  for (const player of list) {
+    if (!validPlayer(player)) continue;
+    next.set(player.id, {
+      id: player.id,
+      name: player.name,
+      x: Math.max(WORLD.radius, Math.min(WORLD.width - WORLD.radius, player.x)),
+      y: Math.max(WORLD.radius, Math.min(WORLD.height - WORLD.radius, player.y)),
+      hp: Math.max(0, Math.min(100, player.hp)),
+      xp: Math.max(0, Math.min(100000, player.xp))
+    });
+  }
+  players = next;
+  const own = players.get(playerId);
+  if (own) {
+    localX = own.x;
+    localY = own.y;
+    xp = own.xp;
+  }
+  updateHud();
 }
-function snapshot() {
-  return {
-    version: ++stateVersion,
-    enemy,
-    players: [...players.values()]
-  };
+
+function applyEnemy(value) {
+  if (!value || value.id !== "moss-titan" ||
+      !Number.isFinite(value.hp) || !Number.isFinite(value.maxHp) ||
+      !Number.isFinite(value.x) || !Number.isFinite(value.y) ||
+      value.maxHp !== 100 || value.hp < 0 || value.hp > value.maxHp) return;
+  enemy = { ...enemy, ...value };
 }
-function publishState(target) {
-  if (room && hostId() === selfId) stateAction.send(snapshot(), target ? { target } : undefined);
-}
+
 function updateHud() {
   const list = [...players.values()].sort((a, b) => a.name.localeCompare(b.name));
   $("#realm-label").textContent = "ROOM: " + roomCode.toUpperCase();
@@ -70,6 +106,7 @@ function updateHud() {
   $("#players-list").replaceChildren();
   for (const player of list) {
     const item = document.createElement("li");
+    item.dataset.playerId = player.id;
     item.dataset.x = String(player.x);
     item.dataset.y = String(player.y);
     const label = document.createElement("strong");
@@ -80,53 +117,158 @@ function updateHud() {
   $("#player-xp").textContent = "XP " + xp;
   $("#boss-hp").textContent = "BOSS HP " + enemy.hp + "/" + enemy.maxHp;
 }
-function acceptPresence(player) {
-  if (!player || typeof player.id !== "string" || typeof player.name !== "string") return;
-  if (!Number.isFinite(player.x) || !Number.isFinite(player.y)) return;
-  if (player.name.length > 16) return;
-  players.set(player.id, {
-    id: player.id,
-    name: player.name,
-    x: Math.max(WORLD.radius, Math.min(WORLD.width - WORLD.radius, player.x)),
-    y: Math.max(WORLD.radius, Math.min(WORLD.height - WORLD.radius, player.y)),
-    hp: 100,
-    xp: Number.isFinite(player.xp) ? Math.max(0, Math.min(100000, player.xp)) : 0
-  });
-  updateHud();
-}
-function broadcastLocalPresence() {
-  const player = localPlayer();
-  players.set(selfId, player);
-  sendPresence();
-  updateHud();
-}
-function processAttack(attackerId) {
-  if (hostId() !== selfId) return;
-  const attacker = players.get(attackerId);
-  if (!attacker) return;
-  const now = Date.now();
-  if (now - (peerAttackTimes.get(attackerId) || 0) < 650) return;
-  if (Math.hypot(attacker.x - enemy.x, attacker.y - enemy.y) > 68) return;
-  peerAttackTimes.set(attackerId, now);
-  enemy = { ...enemy, hp: Math.max(0, enemy.hp - 10) };
-  if (enemy.hp === 0) {
-    if (attackerId === selfId) xp += 25;
-    else {
-      const player = players.get(attackerId);
-      if (player) players.set(attackerId, { ...player, xp: player.xp + 25 });
+
+function handleMessage(raw) {
+  if (typeof raw !== "string" || raw.length > 8192) return;
+  let message;
+  try { message = JSON.parse(raw); } catch { return; }
+  if (!message || typeof message !== "object" || Array.isArray(message)) return;
+
+  if (message.type === "welcome") {
+    if (message.protocol !== 1 || !validPlayer(message.player) || typeof message.player.id !== "string") {
+      setStatus("The server sent an unsupported response. Update the game client.");
+      socket?.close(1002, "Unsupported protocol");
+      return;
     }
-    addChat("Realm", attacker.name + " defeated the Moss Titan and earned 25 XP. The Titan returned.", true);
-    enemy = { ...enemy, hp: enemy.maxHp };
+    playerId = message.player.id;
+    applyEnemy(message.enemy);
+    applyPlayers(message.players);
+    if (!players.has(playerId)) applyPlayers([...players.values(), message.player]);
+    joinedOnce = true;
+    reconnectAttempt = 0;
+    joinPanel.hidden = true;
+    layout.hidden = false;
+    setStatus("Connected to room " + roomCode + ".");
+    addChat("Realm", "Connected. Move with WASD or arrows. Press Space near the Moss Titan.", true);
+    startMovement();
+    startHeartbeat();
+    return;
   }
-  if (attackerId === selfId) {
-    const own = localPlayer();
-    players.set(selfId, { ...own, xp });
+
+  if (message.type === "state") {
+    applyEnemy(message.enemy);
+    applyPlayers(message.players);
+    return;
   }
-  publishState();
-  updateHud();
+
+  if (message.type === "chat") {
+    if (typeof message.name === "string" && typeof message.text === "string" &&
+        message.name.length <= 16 && message.text.length <= 180) {
+      addChat(message.name, message.text);
+    }
+    return;
+  }
+
+  if (message.type === "system") {
+    if (typeof message.text === "string" && message.text.length <= 240) addChat("Realm", message.text, true);
+    return;
+  }
+
+  if (message.type === "pong") {
+    lastPongAt = Date.now();
+    return;
+  }
+
+  if (message.type === "error") {
+    const text = typeof message.message === "string" ? message.message.slice(0, 180) : "The server rejected that action.";
+    addChat("Realm", text, true);
+  }
 }
+
+function buildSocketUrl() {
+  const endpoint = new URL("/room", MULTIPLAYER_ENDPOINT);
+  endpoint.protocol = endpoint.protocol === "https:" ? "wss:" : "ws:";
+  endpoint.searchParams.set("room", roomCode);
+  endpoint.searchParams.set("name", name);
+  return endpoint;
+}
+
+function startHeartbeat() {
+  stopHeartbeat();
+  lastPongAt = Date.now();
+  heartbeatTimer = setInterval(() => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    if (Date.now() - lastPongAt > 50000) {
+      socket.close(4000, "Heartbeat timeout");
+      return;
+    }
+    send({ type: "ping" });
+  }, 20000);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  heartbeatTimer = null;
+}
+
+function scheduleReconnect() {
+  if (intentionalLeave || reconnectTimer || reconnectAttempt >= RECONNECT_DELAYS.length) {
+    if (!intentionalLeave && reconnectAttempt >= RECONNECT_DELAYS.length) {
+      setStatus("Connection lost. Reconnect limit reached. Leave and join again.");
+    }
+    return;
+  }
+  const delay = RECONNECT_DELAYS[reconnectAttempt++];
+  setStatus("Connection lost. Reconnecting in " + Math.ceil(delay / 1000) + "s…");
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    openSocket();
+  }, delay);
+}
+
+function openSocket() {
+  if (intentionalLeave) return;
+  if (!MULTIPLAYER_ENDPOINT) {
+    setStatus("Multiplayer server is not configured. See docs/MULTIPLAYER-SETUP.md.");
+    return;
+  }
+  let current;
+  try {
+    current = new WebSocket(buildSocketUrl());
+    socket = current;
+  } catch (error) {
+    setStatus("Could not create the connection: " + (error?.message || "invalid server URL"));
+    scheduleReconnect();
+    return;
+  }
+
+  if (connectTimeout) clearTimeout(connectTimeout);
+  connectTimeout = setTimeout(() => {
+    if (current.readyState === WebSocket.CONNECTING) current.close(4001, "Connection timeout");
+  }, 12000);
+
+  current.addEventListener("open", () => {
+    if (current !== socket) return;
+    if (connectTimeout) clearTimeout(connectTimeout);
+    connectTimeout = null;
+    setStatus("Connected to server. Joining room…");
+  });
+
+  current.addEventListener("message", (event) => {
+    if (current === socket) handleMessage(event.data);
+  });
+
+  current.addEventListener("error", () => {
+    if (current === socket) setStatus("Network error. Checking the connection…");
+  });
+
+  current.addEventListener("close", () => {
+    if (current !== socket) return;
+    socket = null;
+    if (connectTimeout) clearTimeout(connectTimeout);
+    connectTimeout = null;
+    stopHeartbeat();
+    stopMovement();
+    if (!intentionalLeave) {
+      layout.hidden = false;
+      joinPanel.hidden = true;
+      scheduleReconnect();
+    }
+  });
+}
+
 function connect() {
-  if (room) return;
+  if (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) return;
   name = $("#player-name").value.trim();
   roomCode = $("#room-code").value.trim();
   if (!/^[a-zA-Z0-9_-]{3,24}$/.test(roomCode)) {
@@ -137,97 +279,60 @@ function connect() {
     setStatus("Player name must be 2–16 letters or numbers.");
     return;
   }
-  setStatus("Connecting to the public peer network…");
-  try {
-    room = joinRoom({ appId: APP_ID }, roomCode, {
-      onJoinError: ({ error }) => setStatus("Peer connection failed: " + (error?.message || "network unavailable"))
-    });
-    presenceAction = room.makeAction("presence");
-    chatAction = room.makeAction("chat");
-    attackAction = room.makeAction("attack");
-    stateAction = room.makeAction("state");
-    players = new Map([[selfId, localPlayer()]]);
-
-    presenceAction.onMessage = (player) => acceptPresence(player);
-    chatAction.onMessage = (message) => {
-      if (!message || typeof message.name !== "string" || typeof message.text !== "string") return;
-      if (message.text.length > 180) return;
-      addChat(message.name.slice(0, 16), message.text);
-    };
-    attackAction.onMessage = (_message, { peerId }) => processAttack(peerId);
-    stateAction.onMessage = (state, { peerId }) => {
-      if (!state || !Array.isArray(state.players) || !state.enemy) return;
-      // Accept the elected host's state, or a newer snapshot during host handover.
-      if (peerId !== hostId() && (!Number.isFinite(state.version) || state.version <= stateVersion)) return;
-      if (Number.isFinite(state.version)) stateVersion = Math.max(stateVersion, state.version);
-      if (Number.isFinite(state.enemy.hp) && Number.isFinite(state.enemy.maxHp) && state.enemy.maxHp > 0) {
-        enemy = { ...enemy, hp: Math.max(0, Math.min(state.enemy.maxHp, state.enemy.hp)) };
-      }
-      for (const player of state.players) acceptPresence(player);
-      const own = players.get(selfId);
-      if (own) xp = own.xp;
-      updateHud();
-    };
-    room.onPeerJoin = (peerId) => {
-      sendPresence(peerId);
-      // Every peer can provide a snapshot to a newcomer. The newcomer may
-      // itself become the elected leader, so the old leader is not special here.
-      stateAction.send(snapshot(), { target: peerId });
-      addChat("Realm", "A player connected.", true);
-      updateHud();
-    };
-    room.onPeerLeave = (peerId) => {
-      const departed = players.get(peerId);
-      players.delete(peerId);
-      peerAttackTimes.delete(peerId);
-      if (departed) addChat("Realm", departed.name + " left the realm.", true);
-      if (hostId() === selfId) publishState();
-      updateHud();
-    };
-    layout.hidden = false;
-    joinPanel.hidden = true;
-    broadcastLocalPresence();
-    setStatus("Connected to room " + roomCode + ". Waiting for other players…");
-    addChat("Realm", "Connected. Move with WASD or arrows. Press Space near the Moss Titan.", true);
-    startMovement();
-  } catch (error) {
-    room = null;
-    setStatus("Could not start multiplayer: " + (error?.message || "unknown error"));
+  if (!MULTIPLAYER_ENDPOINT) {
+    setStatus("Multiplayer server is not configured. See docs/MULTIPLAYER-SETUP.md.");
+    return;
   }
+  intentionalLeave = false;
+  joinedOnce = false;
+  reconnectAttempt = 0;
+  playerId = null;
+  players.clear();
+  openSocket();
 }
+
 function stopMovement() {
   if (moveTimer) clearInterval(moveTimer);
   moveTimer = null;
+  keys.clear();
 }
+
 function startMovement() {
   stopMovement();
   moveTimer = setInterval(() => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
     const now = Date.now();
-    if (now - lastMove < 55) return;
+    if (now - lastMoveAt < 55) return;
     let dx = 0, dy = 0;
     if (keys.has("arrowleft") || keys.has("a")) dx--;
     if (keys.has("arrowright") || keys.has("d")) dx++;
     if (keys.has("arrowup") || keys.has("w")) dy--;
     if (keys.has("arrowdown") || keys.has("s")) dy++;
     if (!dx && !dy) return;
-    const length = Math.hypot(dx, dy);
-    localX = Math.max(WORLD.radius, Math.min(WORLD.width - WORLD.radius, localX + dx / length * WORLD.step));
-    localY = Math.max(WORLD.radius, Math.min(WORLD.height - WORLD.radius, localY + dy / length * WORLD.step));
-    lastMove = now;
-    broadcastLocalPresence();
+    lastMoveAt = now;
+    send({ type: "move", dx, dy });
   }, 55);
 }
+
 function leave() {
+  intentionalLeave = true;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = null;
+  stopHeartbeat();
   stopMovement();
-  keys.clear();
-  room?.leave();
-  room = null;
-  presenceAction = chatAction = attackAction = stateAction = null;
+  if (connectTimeout) clearTimeout(connectTimeout);
+  connectTimeout = null;
+  send({ type: "leave" });
+  if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "Player left");
+  socket = null;
   players.clear();
+  playerId = null;
   layout.hidden = true;
   joinPanel.hidden = false;
   setStatus("Disconnected. You left the realm.");
+  updateHud();
 }
+
 function drawWorld() {
   ctx.fillStyle = "#09111d";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -241,40 +346,46 @@ function drawWorld() {
   ctx.fillStyle = "#26334a"; ctx.fillRect(enemy.x - 30, enemy.y - 38, 60, 6);
   ctx.fillStyle = "#ff6687"; ctx.fillRect(enemy.x - 30, enemy.y - 38, 60 * enemy.hp / enemy.maxHp, 6);
   for (const player of players.values()) {
-    ctx.fillStyle = player.id === selfId ? "#68e7f4" : "#c4f26b";
+    ctx.fillStyle = player.id === playerId ? "#68e7f4" : "#c4f26b";
     ctx.beginPath(); ctx.arc(player.x, player.y, 12, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#f0f4ff"; ctx.font = "11px sans-serif"; ctx.fillText(player.name.slice(0, 16), player.x, player.y - 19);
   }
   animationId = requestAnimationFrame(drawWorld);
 }
+
 $("#connect").addEventListener("click", connect);
 $("#leave").addEventListener("click", leave);
 $("#chat-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const input = $("#chat-input");
   const text = input.value.trim().replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 180);
-  if (!text || !room) return;
-  const now = Date.now();
-  chatTimes = chatTimes.filter((time) => now - time < 5000);
-  if (chatTimes.length >= 5) { addChat("Realm", "Chat rate limit reached. Wait a few seconds.", true); return; }
-  chatTimes.push(now);
-  chatAction.send({ name, text });
-  addChat(name, text);
-  input.value = "";
+  if (!text || !socket || socket.readyState !== WebSocket.OPEN) return;
+  if (send({ type: "chat", text })) input.value = "";
 });
+
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
   if (event.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(event.target.tagName)) return;
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key) && !layout.hidden) event.preventDefault();
   keys.add(key);
-  if (key === " " && room && !layout.hidden && Date.now() - lastAttack >= 650) {
-    lastAttack = Date.now();
-    if (hostId() === selfId) processAttack(selfId);
-    else attackAction.send({ type: "attack" }, { target: hostId() });
+  if (key === " " && socket?.readyState === WebSocket.OPEN && !layout.hidden && Date.now() - lastAttackAt >= 650) {
+    lastAttackAt = Date.now();
+    send({ type: "attack" });
   }
 });
 window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
 window.addEventListener("blur", () => keys.clear());
-window.addEventListener("pagehide", () => { room?.leave(); cancelAnimationFrame(animationId); stopMovement(); });
+window.addEventListener("pagehide", () => {
+  intentionalLeave = true;
+  send({ type: "leave" });
+  socket?.close(1000, "Page closed");
+  stopHeartbeat();
+  stopMovement();
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  cancelAnimationFrame(animationId);
+});
+
 drawWorld();
-setStatus("No account or dedicated game server is required. Join a room to connect through Trystero.");
+setStatus(MULTIPLAYER_ENDPOINT
+  ? "Enter a name and room code to join the authoritative game server."
+  : "Multiplayer server is not configured. See docs/MULTIPLAYER-SETUP.md.");
