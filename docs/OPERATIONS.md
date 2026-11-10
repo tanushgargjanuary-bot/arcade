@@ -16,9 +16,9 @@ Players do not need accounts. The project operator needs a Cloudflare account to
 
 From the repository root:
 
-    cd worker
+    npm install
     npx wrangler login
-    npx wrangler deploy
+    npx wrangler deploy --config worker/wrangler.toml
 
 Set the deployed origin in `src/multiplayer-config.js`, then commit and push. Do not add API tokens to source files.
 
