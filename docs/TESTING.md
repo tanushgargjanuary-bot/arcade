@@ -20,10 +20,11 @@ Run:
     npx playwright install chromium
     npm run test:e2e
 
-Playwright starts a local static server and checks:
+Playwright starts a local static server and a local Wrangler Worker. It checks:
 - Lobby rendering and category filtering.
 - Solo Snake launch and return navigation.
 - Realm RPG configuration warning and graceful no-server state.
+- Two separate browser contexts joining one real local Durable Object room, sharing presence, movement and chat.
 
 ## Syntax checks
 
