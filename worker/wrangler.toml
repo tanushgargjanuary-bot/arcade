@@ -11,4 +11,4 @@ tag = "v1"
 new_sqlite_classes = ["RealmRoom"]
 
 [vars]
-ALLOWED_ORIGINS = "https://tanushgargjanuary-bot.github.io"
+ALLOWED_ORIGINS = "https://tanushgargjanuary-bot.github.io,http://127.0.0.1:4173"
