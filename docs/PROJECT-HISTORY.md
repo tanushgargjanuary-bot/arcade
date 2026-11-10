@@ -45,10 +45,19 @@ Arcade is a single website for browser games. The project aims to make games eas
 - Added dependency audit and CI failure diagnostics.
 - Kept player accounts out of scope.
 
+### Robustness and handover
+- Expanded CI, security controls, operational guidance and project documentation.
+- Recorded known gaps instead of treating local tests as production evidence.
+- Paused active development on 10 November 2026.
+- Left the project on `main` with a documented restart checklist.
+- Did not deploy the Cloudflare Worker. Production multiplayer remains unavailable.
+
 ## Current status
 
-The code now uses the authoritative Worker protocol. The project owner must deploy the Worker and set its public URL before live multiplayer works. CI tests the Worker locally with two browser clients. Real multi-network production testing remains required.
+Arcade is **paused, not abandoned**. The static GitHub Pages site and solo games remain available. The authoritative Worker implementation is in the repository and has local integration tests. The Worker has not been deployed, and the public client endpoint remains empty. Production multiplayer, cross-network testing, monitoring, load testing and several security controls remain incomplete.
 
 ## Direction
 
 The project should prefer the simplest architecture that provides real integrity. Player accounts are not a default requirement. Add identity only when a feature needs persistent ownership, moderation or abuse prevention that anonymous sessions cannot provide.
+
+When work resumes, start with the handover checklist in [PAUSE-STATUS.md](PAUSE-STATUS.md). Do not restart by adding features before the deployment and validation gaps are understood.
