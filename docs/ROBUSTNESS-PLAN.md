@@ -43,7 +43,6 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 
 ## Phase 2 — Abuse resistance
 
-- Add high-entropy room invite links.
 - Add global connection and room-creation budgets.
 - Add moderation, mute, block and reporting.
 - Add message abuse and reconnect storm tests.
