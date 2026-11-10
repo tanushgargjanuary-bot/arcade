@@ -260,8 +260,13 @@ function openSocket() {
     stopHeartbeat();
     stopMovement();
     if (!intentionalLeave) {
-      layout.hidden = false;
-      joinPanel.hidden = true;
+      if (joinedOnce) {
+        layout.hidden = false;
+        joinPanel.hidden = true;
+      } else {
+        layout.hidden = true;
+        joinPanel.hidden = false;
+      }
       scheduleReconnect();
     }
   });
