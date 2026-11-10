@@ -7,6 +7,10 @@ A free browser-game collection. The first platform release includes Neon Dodge, 
 ## Play
 Open the site and choose a game. Guest progress is stored in your browser. Snake uses arrow keys or WASD. 2048 uses arrows, WASD or swipe. Minesweeper uses left click to reveal and right click to flag. Neon Dodge has its own keyboard and touch controls.
 
+## Deployment
+
+The workflow validates every pull request and deploys updates from `main`. The repository owner must enable Pages once: open **Settings → Pages → Build and deployment**, then select **GitHub Actions** as the source. The connected GitHub integration cannot enable Pages for this repository because its installation token lacks that permission.
+
 ## Accounts and data
 Accounts are optional. Guest data stays in browser storage. Cloud accounts and cross-device saves use Supabase Auth and PostgreSQL with Row Level Security. They remain disabled until you create a Supabase project and follow [the setup guide](docs/SETUP-SUPABASE.md).
 
