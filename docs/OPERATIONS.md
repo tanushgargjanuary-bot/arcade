@@ -1,51 +1,53 @@
 # Operations guide
 
-## Services
+## Services and dependencies
 
-| Service | Role | Deployment |
+| Component | Role | Deployment / owner |
 |---|---|---|
-| GitHub Pages | Static lobby and games | GitHub Actions on main |
-| Cloudflare Worker | WebSocket entry point and health endpoint | Wrangler manual deployment |
-| Durable Objects | Room state and live WebSocket fan-out | Created by Wrangler migration |
+| GitHub Pages | Static lobby and games | GitHub Actions |
+| Trystero | Peer discovery and WebRTC setup | External open-source library |
+| Nostr relays | Public peer discovery/signalling | Third-party relay operators |
+| WebRTC | Direct peer data transport | Player browsers and network paths |
+| Legacy Cloudflare Worker | Previous room server | Retained in source; not used by current client |
 
 ## Release process
 
 1. Create a focused branch from main.
-2. Update tests and documentation with the feature.
-3. Open a pull request.
-4. Wait for unit tests, syntax checks and browser tests.
-5. Review the diff and security impact.
-6. Merge to main.
-7. Confirm the Pages deployment succeeds.
-8. Deploy Worker changes separately with Wrangler.
-9. Run the two-browser multiplayer smoke test.
+2. Read the project knowledge base and inspect current implementation.
+3. Update tests and documentation with the feature.
+4. Open a pull request.
+5. Wait for unit tests, syntax checks and browser tests.
+6. Review the diff and security impact.
+7. Merge to main.
+8. Confirm the GitHub Pages deployment succeeds.
+9. Run a real two-browser P2P smoke test after networking changes.
 
-## Health check
+## Health and availability
 
-The Worker exposes GET /health. It reports service availability only. It does not prove that WebSocket rooms work.
+There is no Arcade-owned multiplayer health endpoint. The browser depends on the external Trystero package CDN, public Nostr relays and WebRTC connectivity. A successful GitHub Pages deployment does not prove those dependencies are available.
 
 ## Common failures
 
 | Symptom | Check |
 |---|---|
-| Realm says server not configured | Set MULTIPLAYER_ENDPOINT and deploy Pages |
-| WebSocket fails immediately | Worker URL, HTTPS/WSS protocol, allowed Origin and deployment status |
-| Player joins but no other players appear | Both clients must use the same room code and Worker endpoint |
-| Chat not delivered | WebSocket connection state, message rate limit and browser console |
-| Boss does not take damage | Move within range, wait for cooldown and verify the Worker deployment |
+| Trystero module fails to load | CDN availability, browser console and network access |
+| Room remains empty | Both clients must use the same room code and app ID |
+| Players cannot discover each other | Public relay availability, room code, browser network access |
+| Peer discovered but data channel fails | NAT/firewall restrictions; test another network or configure TURN |
+| Chat or state is inconsistent | Browser console, peer disconnects and room leader changes |
+| Boss state resets after leader leaves | Current migration is best-effort; this is a known prototype limitation |
 | Pages deploy fails | GitHub Pages source must be GitHub Actions; inspect Actions logs |
 
 ## Data recovery
 
-Solo scores are local to each browser. Restore them with a valid JSON backup. The project has no central backup of player records.
-
-Boss HP is stored in Durable Object storage. Player presence and XP are currently connection-scoped. There is no account recovery process.
+Solo scores are local to each browser. Restore them with a valid JSON backup. Multiplayer room state is temporary and has no central backup or recovery process.
 
 ## Incident response
 
-1. Disable multiplayer endpoint in the client if abuse or instability occurs.
-2. Inspect Cloudflare Worker logs and usage.
-3. Rotate or restrict exposed credentials. No secret should be stored in client code.
-4. Preserve logs needed to understand the incident.
-5. Fix the issue and add a regression test.
-6. Update security and operations docs.
+1. Disable or remove the Realm RPG entry if a serious issue affects players.
+2. Check whether the CDN or public discovery relays are unavailable.
+3. Reproduce the issue with two browsers and record the network conditions.
+4. Fix the issue and add a regression test.
+5. Update security and operations documents.
+
+There is no project-owned relay service to restart. Do not promise a service-level uptime for third-party public relays.
