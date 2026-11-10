@@ -14,7 +14,7 @@ function home() {
     <section class="hero"><div><p class="eyebrow">YOUR NEXT DISTRACTION</p><h1>Play something.<br><span>Anything.</span></h1><p>A growing collection of small games. No installs. No nonsense. Just play.</p><a class="button primary" href="#library">Explore games ↘</a></div><div class="hero-art"><div class="art-core">✳</div></div></section>
     <section class="quick-stats"><div><span class="stat-kicker">GAMES PLAYED</span><strong id="played">00</strong></div><div><span class="stat-kicker">BEST SCORE</span><strong id="best">00000</strong></div><div><span class="stat-kicker">PLAY TIME</span><strong id="time">0m</strong></div><div class="stats-note" id="stats-note">Saved on this device.</div></section>
     <section id="library" class="library"><div class="section-head"><div><p class="eyebrow">THE COLLECTION / 001</p><h2>Pick your game.</h2></div><input id="search" class="search" type="search" placeholder="Find a game…" aria-label="Find a game"></div>
-    <div class="filters"><button class="filter active" data-filter="all">All games</button><button class="filter" data-filter="arcade">Arcade</button><button class="filter" data-filter="puzzle">Puzzle</button><button class="filter" data-filter="strategy">Strategy</button></div><div id="grid" class="grid"></div></section>
+    <div class="filters"><button class="filter active" data-filter="all">All games</button><button class="filter" data-filter="arcade">Arcade</button><button class="filter" data-filter="puzzle">Puzzle</button><button class="filter" data-filter="strategy">Strategy</button><button class="filter" data-filter="multiplayer">Multiplayer</button></div><div id="grid" class="grid"></div></section>
     <section id="profile" class="profile"><div><p class="eyebrow">PLAYER PROFILE</p><h2>Playing as Guest.</h2><p>Your progress is stored in this browser. Export a backup or import it on another device.</p></div><div class="profile-actions"><button id="profile-export" class="button">Export backup ↓</button><button id="profile-import" class="button">Import backup ↑</button></div></section>`;
   const s = stats();
   $("#played").textContent = String(s.played).padStart(2, "0");
@@ -51,6 +51,7 @@ function cards() {
 
 function openGame(id) {
   if (id === "neon-dodge") { location.href = "./neon-dodge.html"; return; }
+  if (id === "realm-rpg") { location.href = "./realm.html"; return; }
   location.hash = "/game/" + id;
 }
 

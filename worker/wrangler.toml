@@ -1,0 +1,14 @@
+name = "arcade-realm-api"
+main = "src/index.js"
+compatibility_date = "2026-11-10"
+
+[[durable_objects.bindings]]
+name = "REALM_ROOMS"
+class_name = "RealmRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RealmRoom"]
+
+[vars]
+ALLOWED_ORIGINS = "https://tanushgargjanuary-bot.github.io"
