@@ -80,7 +80,7 @@ No player account or persistent profile exists. A reconnect creates a new tempor
 - Random room codes are high-entropy invite identifiers, not verified user identities. Anyone with the invite can join. Treat them as shareable bearer links.
 - Display names can be impersonated.
 - The server is authoritative for the implemented game rules, but it does not provide a general anti-cheat system.
-- The Worker limits room size and per-connection traffic. It does not yet provide global IP reputation, global room-creation quotas or human moderation.
+- The Worker limits room size and per-connection traffic. A Cloudflare Rate Limiting binding also applies an approximate per-IP connection limit in each edge location. It is not a strict global quota.
 - Cloudflare availability and plan quotas are external dependencies.
 - The project owner must deploy the Worker. Players do not need Cloudflare accounts.
 - Do not use temporary XP or this prototype for prizes, payments or ranked competition.
