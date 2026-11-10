@@ -1,21 +1,22 @@
 # Security policy
 
-## Current security model
+## Security model
 
-Arcade has two data models:
-- Solo game records are stored in browser localStorage. Users can export and import JSON backups.
-- Realm RPG uses Trystero for public peer discovery and WebRTC for direct peer-to-peer game messages.
+Arcade uses browser localStorage for solo progress. Realm RPG uses a Cloudflare Worker and Durable Objects for authoritative multiplayer state.
 
 ## Rules
 
 - Never commit player data, passwords, tokens or private backup files.
-- The current Realm client must not contain provider API keys or privileged credentials.
-- Treat all browser input as untrusted, including peer messages.
-- Treat display names and peer IDs as temporary labels, not verified identities.
-- Do not use local scores or peer-hosted multiplayer state for prizes, payments or ranked competition.
-- Review [docs/SECURITY.md](docs/SECURITY.md) before changing the multiplayer protocol.
-- Report security issues privately to the repository owner. Do not publish exploit details in public issues.
+- Never put Cloudflare API tokens in browser code.
+- Treat all browser input as untrusted.
+- Treat room codes as public identifiers, not passwords.
+- Treat display names and temporary player IDs as unverified.
+- Do not use temporary XP or peer data for prizes, payments or rankings.
+- Keep server-side validation for movement, chat and combat.
+- Report security issues privately to the repository owner.
 
 ## Known limits
 
-Realm RPG has no login, identity proof, moderation, trusted server authority or full anti-cheat. Public Nostr relays are external discovery dependencies. WebRTC direct connectivity can fail on some networks. See [docs/SECURITY.md](docs/SECURITY.md) for the threat model and required controls before public growth.
+Realm RPG has no player accounts, verified identities, persistent bans or chat moderation. The server validates game actions but cannot prove a real-world identity. Anonymous users can create multiple sessions. The Worker does not yet have global IP reputation or global room-creation limits.
+
+See [docs/SECURITY.md](docs/SECURITY.md) for the threat model and [docs/ROBUSTNESS-PLAN.md](docs/ROBUSTNESS-PLAN.md) for planned controls.
