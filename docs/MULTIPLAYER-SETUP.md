@@ -14,7 +14,7 @@ They need:
 The authoritative game server runs on Cloudflare Workers and Durable Objects. The project owner needs a Cloudflare account to deploy and operate it. This is an infrastructure account. It does not create accounts for players.
 
 1. Create or sign in to a Cloudflare account.
-2. Install Node.js 20 or later.
+2. Install Node.js 22 or later.
 3. From the repository root, run:
 
        cd worker
@@ -51,7 +51,7 @@ The client generates a 64-bit random room code by default. Treat it as a bearer 
 
 ## Local development and integration tests
 
-Requires Node.js 20+ and Python 3.
+Requires Node.js 22+ and Python 3.
 
     npm install
     npm test
