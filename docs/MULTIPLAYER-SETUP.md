@@ -15,7 +15,7 @@ The authoritative game server runs on Cloudflare Workers and Durable Objects. Th
 
 1. Create or sign in to a Cloudflare account.
 2. Install Node.js 22 or later.
-3. From the repository root, install the pinned tools and authenticate:
+3. From the repository root, install the project tools and authenticate:
 
        npm install
        npx wrangler login
@@ -24,16 +24,16 @@ The authoritative game server runs on Cloudflare Workers and Durable Objects. Th
 
        npx wrangler deploy --config worker/wrangler.toml
 
-4. Copy the deployed Worker origin. It will look like:
+5. Copy the deployed Worker origin. It will look like:
 
        https://arcade-realm-api.<account-subdomain>.workers.dev
 
-5. Open `src/multiplayer-config.js` and set the public origin:
+6. Open `src/multiplayer-config.js` and set the public origin:
 
        export const MULTIPLAYER_ENDPOINT = "https://arcade-realm-api.<account-subdomain>.workers.dev";
 
-6. Commit and push that change to `main`. GitHub Pages will publish the client after CI passes.
-7. Open the Worker health URL and confirm it returns JSON with `ok: true`:
+7. Commit and push that change to `main`. GitHub Pages will publish the client after CI passes.
+8. Open the Worker health URL and confirm it returns JSON with `ok: true`:
 
        https://arcade-realm-api.<account-subdomain>.workers.dev/health
 
