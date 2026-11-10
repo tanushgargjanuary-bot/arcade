@@ -1,1 +1,106 @@
-import{GAMES}from"./data.js";import{readLocal,recordRun,mergeCloudGame,stats,timeLabel}from"./storage.js";import{mountGame}from"./games.js";import{currentUser,auth,logout,loadCloud,saveCloud,authListener}from"./cloud.js";const $=s=>document.querySelector(s);let user=null,cleanup=null,filter="all",search="";const app=$("#app"),modal=$("#modal-root");function profile(){if(user){$("#connection-status").textContent="● CLOUD SYNC";$("#account-button").textContent="Account"}else{$("#connection-status").textContent="● GUEST MODE";$("#account-button").textContent="Sign in"}}function home(){if(cleanup){cleanup();cleanup=null}app.innerHTML='<section class="hero"><div><p class="eyebrow">YOUR NEXT DISTRACTION</p><h1>Play something.<br><span>Anything.</span></h1><p>A growing collection of small games. No installs. No nonsense. Just play.</p><a class="button primary" href="#library">Explore games ↘</a></div><div class="hero-art"><div class="art-core">✳</div></div></section><section class="quick-stats"><div><span class="stat-kicker">GAMES PLAYED</span><strong id="played">00</strong></div><div><span class="stat-kicker">BEST SCORE</span><strong id="best">00000</strong></div><div><span class="stat-kicker">PLAY TIME</span><strong id="time">0m</strong></div><div class="stats-note" id="stats-note">Your records are saved in this browser.</div></section><section id="library" class="library"><div class="section-head"><div><p class="eyebrow">THE COLLECTION / 001</p><h2>Pick your game.</h2></div><input id="search" class="search" type="search" placeholder="Find a game…"></div><div class="filters"><button class="filter active" data-filter="all">All games</button><button class="filter" data-filter="arcade">Arcade</button><button class="filter" data-filter="puzzle">Puzzle</button><button class="filter" data-filter="strategy">Strategy</button></div><div id="grid" class="grid"></div></section><section id="profile" class="profile"><div><p class="eyebrow">PLAYER PROFILE</p><h2 id="profile-title">Playing as Guest.</h2><p id="profile-copy">Guest progress stays on this device.</p></div><button id="profile-button" class="button">Create account ↗</button></section>';const s=stats();$("#played").textContent=String(s.played).padStart(2,"0");$("#best").textContent=String(s.best).padStart(5,"0");$("#time").textContent=timeLabel(s.seconds);$("#stats-note").textContent=user?"Cloud account connected.":"Your records are saved in this browser.";$("#profile-title").textContent=user?"Welcome back, "+(user.user_metadata?.display_name||"Player")+".":"Playing as Guest.";$("#profile-copy").textContent=user?"Your account is active. Personal saves use database access policies.":"Guest progress stays on this device. Sign in to sync between devices.";$("#profile-button").textContent=user?"Sign out":"Create account ↗";$("#profile-button").onclick=()=>user?doLogout():authModal("signup");$("#search").value=search;$("#search").oninput=e=>{search=e.target.value.toLowerCase();cards()};document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));cards()});cards()}function cards(){const list=GAMES.filter(g=>(filter==="all"||g.category===filter)&&(g.name+" "+g.description).toLowerCase().includes(search)),d=readLocal();$("#grid").innerHTML=list.length?list.map(g=>'<article class="card" data-id="'+g.id+'"><div class="card-art">'+g.symbol+'</div><div class="card-info"><div class="meta"><span>'+g.category.toUpperCase()+'</span><span>'+g.tag+'</span></div><h3>'+g.name+'</h3><p>'+g.description+'</p><div class="card-bottom"><span class="best">BEST '+String(d.games[g.id]?.best||0).padStart(5,"0")+'</span><button class="play" data-play="'+g.id+'">PLAY ↗</button></div></div></article>').join(""):'<div class="empty">No games match that search.</div>';document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>openGame(b.dataset.play))}function openGame(id){if(id==="neon-dodge"){location.href="./neon-dodge.html";return}location.hash="/game/"+id}async function gamePage(id){const g=GAMES.find(x=>x.id===id);if(!g){location.hash="/";return}app.innerHTML='<section class="game-screen"><div class="game-top"><div><p class="eyebrow">ARCADE / '+g.category.toUpperCase()+'</p><h1>'+g.name+'</h1><p>'+g.description+'</p></div><button id="back" class="button quiet">← BACK TO LOBBY</button></div><div class="board"><div class="toolbar"><span>PLAYER: '+(user?.user_metadata?.display_name||"GUEST")+'</span><span>BEST: '+(readLocal().games[id]?.best||0)+'</span></div><div id="game-area" class="game-area"></div><p class="help">Use keyboard or touch controls where available. Records update when a run ends.</p></div></section>';$("#back").onclick=()=>location.hash="/";const gameRoot=$("#game-area");if(user){try{const remote=await loadCloud(id);if(location.hash!=="#/game/"+id)return;if(remote)mergeCloudGame(id,remote)}catch(e){console.warn("Cloud save read failed",e)}}const start=Date.now();cleanup=mountGame(id,gameRoot,async r=>{const seconds=Math.floor((Date.now()-start)/1000),d=recordRun(id,r.score,seconds);try{if(user)await saveCloud(id,{best:d.games[id].best,plays:d.games[id].plays,totalSeconds:d.games[id].totalSeconds})}catch(e){console.error("Cloud save failed",e)}})}function route(){const m=location.hash.match(/^#\/game\/([a-z0-9-]+)$/);if(m)gamePage(m[1]);else home()}function authModal(mode){const signup=mode==="signup";modal.innerHTML='<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true"><p class="eyebrow">PLAYER ACCOUNT</p><h2>'+(signup?"Create your account.":"Welcome back.")+'</h2><p>Accounts are optional. Guest progress stays in this browser.</p><form id="form">'+(signup?'<label>DISPLAY NAME<input id="name" maxlength="24" required></label>':'')+'<label>EMAIL<input id="email" type="email" required></label><label>PASSWORD<input id="password" type="password" minlength="8" required></label><p id="error" class="error"></p><button class="button primary" type="submit">'+(signup?"Create account":"Sign in")+'</button><button class="button quiet" type="button" id="switch">'+(signup?"I have an account":"Create account")+'</button><button class="button quiet" type="button" id="close">Close</button></form></section></div>';$("#close").onclick=()=>modal.innerHTML="";$("#switch").onclick=()=>authModal(signup?"signin":"signup");$("#form").onsubmit=async e=>{e.preventDefault();try{const r=await auth(mode,$("#email").value.trim(),$("#password").value,signup?$("#name").value.trim():"");if(r.error)throw r.error;if(signup&&!r.data.session){$("#error").textContent="Check your email to confirm your account, then sign in.";return}user=r.data.user;modal.innerHTML="";home();profile()}catch(err){$("#error").textContent=err.message||"Authentication failed"}}}async function doLogout(){await logout();user=null;home();profile()}$("#account-button").onclick=()=>authModal("signin");window.addEventListener("hashchange",route);(async()=>{home();route();try{user=await currentUser();await authListener(u=>{user=u;home();profile()})}catch(e){console.warn("Cloud accounts unavailable; guest mode remains active",e)}profile()})();
+import { GAMES } from "./data.js";
+import { readLocal, recordRun, stats, timeLabel, importData, exportData } from "./storage.js";
+import { mountGame } from "./games.js";
+
+const $ = (selector) => document.querySelector(selector);
+const app = $("#app");
+let cleanup = null;
+let filter = "all";
+let search = "";
+
+function home() {
+  if (cleanup) { cleanup(); cleanup = null; }
+  app.innerHTML = `
+    <section class="hero"><div><p class="eyebrow">YOUR NEXT DISTRACTION</p><h1>Play something.<br><span>Anything.</span></h1><p>A growing collection of small games. No installs. No nonsense. Just play.</p><a class="button primary" href="#library">Explore games ↘</a></div><div class="hero-art"><div class="art-core">✳</div></div></section>
+    <section class="quick-stats"><div><span class="stat-kicker">GAMES PLAYED</span><strong id="played">00</strong></div><div><span class="stat-kicker">BEST SCORE</span><strong id="best">00000</strong></div><div><span class="stat-kicker">PLAY TIME</span><strong id="time">0m</strong></div><div class="stats-note" id="stats-note">Saved on this device.</div></section>
+    <section id="library" class="library"><div class="section-head"><div><p class="eyebrow">THE COLLECTION / 001</p><h2>Pick your game.</h2></div><input id="search" class="search" type="search" placeholder="Find a game…" aria-label="Find a game"></div>
+    <div class="filters"><button class="filter active" data-filter="all">All games</button><button class="filter" data-filter="arcade">Arcade</button><button class="filter" data-filter="puzzle">Puzzle</button><button class="filter" data-filter="strategy">Strategy</button></div><div id="grid" class="grid"></div></section>
+    <section id="profile" class="profile"><div><p class="eyebrow">PLAYER PROFILE</p><h2>Playing as Guest.</h2><p>Your progress is stored in this browser. Export a backup or import it on another device.</p></div><div class="profile-actions"><button id="profile-export" class="button">Export backup ↓</button><button id="profile-import" class="button">Import backup ↑</button></div></section>`;
+  const s = stats();
+  $("#played").textContent = String(s.played).padStart(2, "0");
+  $("#best").textContent = String(s.best).padStart(5, "0");
+  $("#time").textContent = timeLabel(s.seconds);
+  $("#stats-note").textContent = "Saved on this device. Export a backup to move it.";
+  $("#search").value = search;
+  $("#search").oninput = (event) => { search = event.target.value.toLowerCase(); cards(); };
+  document.querySelectorAll("[data-filter]").forEach((button) => {
+    button.onclick = () => {
+      filter = button.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((item) => item.classList.toggle("active", item === button));
+      cards();
+    };
+  });
+  $("#profile-export").onclick = exportBackup;
+  $("#profile-import").onclick = () => $("#import-file").click();
+  cards();
+}
+
+function cards() {
+  const list = GAMES.filter((game) => (filter === "all" || game.category === filter) &&
+    (game.name + " " + game.description).toLowerCase().includes(search));
+  const data = readLocal();
+  $("#grid").innerHTML = list.length ? list.map((game) => `
+    <article class="card" data-id="${game.id}"><div class="card-art">${game.symbol}</div><div class="card-info">
+    <div class="meta"><span>${game.category.toUpperCase()}</span><span>${game.tag}</span></div><h3>${game.name}</h3><p>${game.description}</p>
+    <div class="card-bottom"><span class="best">BEST ${String(data.games[game.id]?.best || 0).padStart(5, "0")}</span><button class="play" data-play="${game.id}">PLAY ↗</button></div></div></article>`).join("") :
+    '<div class="empty">No games match that search.</div>';
+  document.querySelectorAll("[data-play]").forEach((button) => {
+    button.onclick = () => openGame(button.dataset.play);
+  });
+}
+
+function openGame(id) {
+  if (id === "neon-dodge") { location.href = "./neon-dodge.html"; return; }
+  location.hash = "/game/" + id;
+}
+
+function gamePage(id) {
+  const game = GAMES.find((item) => item.id === id);
+  if (!game) { location.hash = "/"; return; }
+  app.innerHTML = `<section class="game-screen"><div class="game-top"><div><p class="eyebrow">ARCADE / ${game.category.toUpperCase()}</p><h1>${game.name}</h1><p>${game.description}</p></div><button id="back" class="button quiet">← BACK TO LOBBY</button></div>
+  <div class="board"><div class="toolbar"><span>PLAYER: GUEST</span><span>BEST: ${readLocal().games[id]?.best || 0}</span></div><div id="game-area" class="game-area"></div><p class="help">Use keyboard or touch controls where available. Records update when a run ends.</p></div></section>`;
+  $("#back").onclick = () => { location.hash = "/"; };
+  const started = Date.now();
+  cleanup = mountGame(id, $("#game-area"), (result) => {
+    recordRun(id, result.score, Math.floor((Date.now() - started) / 1000));
+  });
+}
+
+function route() {
+  const match = location.hash.match(/^#\/game\/([a-z0-9-]+)$/);
+  if (cleanup) { cleanup(); cleanup = null; }
+  if (match) gamePage(match[1]); else home();
+}
+
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "arcade-progress-backup.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackup(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  if (file.size > 1024 * 1024) { alert("Backup is too large. Select a file under 1 MB."); return; }
+  try {
+    const payload = JSON.parse(await file.text());
+    if (!confirm("Import this backup? Existing records will be kept when they are higher.")) return;
+    importData(payload);
+    home();
+    alert("Progress imported. Your records are now available in this browser.");
+  } catch (error) {
+    alert(error.message || "This backup file is not valid.");
+  }
+}
+
+$("#export-button").onclick = exportBackup;
+$("#import-button").onclick = () => $("#import-file").click();
+$("#import-file").addEventListener("change", importBackup);
+window.addEventListener("hashchange", route);
+home();
+route();
