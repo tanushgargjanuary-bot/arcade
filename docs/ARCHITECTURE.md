@@ -42,6 +42,7 @@ Client to server:
 - move with dx and dy: movement request. Server clamps position and applies a fixed step.
 - chat with text: server removes control characters and caps message length.
 - attack: server checks range and cooldown before damaging the shared boss.
+- leave: marks the player inactive, broadcasts the departure and closes the socket.
 
 Server to client:
 - welcome: assigned player ID, own player state, current players and boss.
