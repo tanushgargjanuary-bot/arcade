@@ -40,7 +40,7 @@ Realm RPG uses temporary server-generated connection IDs. It does not create pla
 
 ## Development
 
-Requires Node.js 20+ and Python 3.
+Requires Node.js 22+ and Python 3.
 
     npm install
     npm test
