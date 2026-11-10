@@ -34,6 +34,9 @@ test("protocol parser rejects malformed, oversized and unknown payloads", () => 
   assert.equal(parseClientMessage("{"), null);
   assert.equal(parseClientMessage("x".repeat(MAX_RAW_MESSAGE_LENGTH + 1)), null);
   assert.equal(parseClientMessage(JSON.stringify({ type: "admin", value: true })), null);
+  assert.equal(parseClientMessage(JSON.stringify({ type: "toString" })), null);
+  assert.equal(parseClientMessage(JSON.stringify({ type: "__proto__" })), null);
+  assert.equal(parseClientMessage(JSON.stringify({ type: "chat", text: "😀".repeat(513) })), null);
   assert.equal(parseClientMessage(JSON.stringify({ type: "attack", damage: 999 })), null);
   assert.equal(parseClientMessage(JSON.stringify({ type: "chat", text: "hello", name: "spoofed" })), null);
   assert.equal(parseClientMessage(JSON.stringify({ type: "move", dx: 99, dy: 0 })), null);
