@@ -43,10 +43,11 @@ Cloudflare plan limits and availability can change. Check the current Cloudflare
 1. Open the [Arcade game lobby](https://tanushgargjanuary-bot.github.io/arcade/).
 2. Open Realm RPG.
 3. Enter a display name.
-4. Enter a room code. Share the exact same code with friends.
-5. Select **Join Realm**.
+4. Use the generated room code or enter your own code of at least eight characters.
+5. Select **Copy Invite Link** and share the link with your group.
+6. Select **Join Realm**.
 
-Room codes are not passwords. Anyone who knows a code can attempt to join. Use a non-obvious code for a private group. Do not put personal information in names or codes.
+The client generates a 64-bit random room code by default. Treat it as a bearer invite: anyone with the link can join. Do not post it publicly. A room code does not prove player identity. Do not put personal information in names or codes.
 
 ## Local development and integration tests
 
