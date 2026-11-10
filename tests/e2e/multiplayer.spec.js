@@ -14,8 +14,9 @@ async function moveToward(page, playerLocator, axis, target) {
   if (Math.abs(delta) < 20) return;
   const key = axis === "x" ? (delta > 0 ? "ArrowRight" : "ArrowLeft") : (delta > 0 ? "ArrowDown" : "ArrowUp");
   await page.keyboard.down(key);
-  await page.waitForTimeout(Math.abs(delta) / 300 * 1000 + 220);
+  await page.waitForTimeout(Math.ceil(Math.abs(delta) / 18) * 55 + 35);
   await page.keyboard.up(key);
+  await page.waitForTimeout(100);
 }
 
 test("two browser clients share presence, movement, chat and boss combat", async ({ browser }) => {
