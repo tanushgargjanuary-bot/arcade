@@ -1,33 +1,34 @@
 # Roadmap
 
 ## Delivered
+
 - [x] Responsive game lobby, search and category filters.
 - [x] Neon Dodge, Snake, 2048 and Minesweeper.
 - [x] Local player statistics and versioned JSON backups.
 - [x] GitHub Pages deployment workflow.
-- [x] Realm RPG client and Cloudflare Durable Object WebSocket server source.
-- [x] Shared player presence, movement, room chat and cooperative boss combat.
-- [x] Room/name/chat validation, bounded movement, attack range/cooldown and room capacity.
-- [x] Node unit tests and Playwright browser tests, including a two-client local Durable Object integration test.
-- [x] Project history, game design, testing, multiplayer setup, operations and security documentation.
+- [x] Realm RPG client with Trystero 0.25.4 and WebRTC peer networking.
+- [x] Account-free room discovery through the default public Nostr strategy.
+- [x] Peer presence, movement, room chat and room-leader-coordinated boss combat in the client.
+- [x] Project history, game design, setup, architecture, testing, operations and security documentation.
 
-## Required before multiplayer is live
-- [ ] Create or use a Cloudflare account.
-- [ ] Deploy worker/ with Wrangler.
-- [ ] Set the deployed Worker URL in src/multiplayer-config.js.
-- [ ] Deploy the updated static site to GitHub Pages.
-- [ ] Test two separate browsers joining the same room.
-- [ ] Verify movement, chat, boss damage, disconnect and reconnect behaviour.
+## Required before calling P2P multiplayer reliable
+
+- [ ] Verify two players on separate physical devices and networks.
+- [ ] Verify a third player joining an active room.
+- [ ] Test room leader departure and state handover.
+- [ ] Test reconnects and public relay outages.
+- [ ] Test networks that require TURN and decide whether to document or provide a relay.
+- [ ] Run a basic abuse and malformed-message test.
 
 ## Next engineering priorities
 
-1. Add production-like Durable Object lifecycle, hibernation and migration tests.
-2. Add reconnection handling and clean player lifecycle behaviour.
+1. Complete live multi-network WebRTC testing.
+2. Improve peer state reconciliation and room leader handover.
 3. Add mobile virtual controls and accessibility.
-4. Add persistent player identity only after choosing an authentication model.
-5. Add moderation, abuse reporting and rate limits before scaling public chat.
-6. Add load tests and cost monitoring before increasing room capacity.
-7. Add inventory, quests, equipment, progression and more co-op encounters.
+4. Add moderation, mute, block and reporting before public chat growth.
+5. Decide whether to add an optional trusted backend for persistent characters.
+6. Add quests, inventory, equipment and more co-op encounters.
+7. Consider a small-room connection limit based on measured browser performance.
 
 ## Explicit non-goals for this phase
 
@@ -37,8 +38,8 @@
 - No player-to-player trading.
 - No voice chat.
 - No ranked or prize-based competition.
-- No promise of unlimited free backend usage.
+- No guarantee of free or permanent public relay availability.
 
 ## Release rule
 
-A multiplayer feature is not live because source code exists. It is live only after the Worker and Pages client are deployed and a two-client smoke test passes.
+A multiplayer feature is not reliable because source code exists or CI passes with a mock transport. It needs a real two-client test across independent networks.
