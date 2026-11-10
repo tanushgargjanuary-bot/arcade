@@ -1,5 +1,7 @@
 # Testing and quality gates
 
+> **Project status: PAUSED — 10 November 2026.** The commands below describe the current local test suite. They are not evidence of a production deployment or production validation.
+
 ## Node tests
 
 Run `npm test`.
@@ -50,9 +52,11 @@ GitHub Actions runs Node tests, syntax checks, dependency audit and Playwright i
 
 Playwright diagnostics are uploaded when a test fails and retained for seven days.
 
-## Manual release checks
+The latest validation evidence recorded before the pause is documented in [PAUSE-STATUS.md](PAUSE-STATUS.md). Re-run CI before any future release. Workflow success can change as dependencies and hosted runners change.
 
-Before public growth, test:
+## Manual release checks (NOT COMPLETED)
+
+Before public multiplayer use, test:
 - two devices on separate networks;
 - reconnect after Wi-Fi loss;
 - reconnect after a browser sleeps and resumes;
