@@ -75,3 +75,5 @@ The project is paused. Do not start feature work without an explicit decision to
 ## License
 
 MIT.
+
+<!-- CodeRabbit review trigger -->
