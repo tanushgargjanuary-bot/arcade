@@ -38,12 +38,13 @@ export function cleanChatMessage(value) {
 }
 
 export function parseClientMessage(raw) {
-  if (typeof raw !== "string" || raw.length === 0 || raw.length > MAX_RAW_MESSAGE_LENGTH) return null;
+  if (typeof raw !== "string" || raw.length === 0 || new TextEncoder().encode(raw).byteLength > MAX_RAW_MESSAGE_LENGTH) return null;
   let message;
   try { message = JSON.parse(raw); } catch { return null; }
   if (!message || typeof message !== "object" || Array.isArray(message) || typeof message.type !== "string") return null;
+  if (!Object.hasOwn(ALLOWED_KEYS, message.type)) return null;
   const allowed = ALLOWED_KEYS[message.type];
-  if (!allowed || Object.keys(message).some((key) => !allowed.includes(key))) return null;
+  if (Object.keys(message).some((key) => !allowed.includes(key))) return null;
   if (message.type === "move") {
     if (!Number.isFinite(message.dx) || !Number.isFinite(message.dy)) return null;
     if (Math.abs(message.dx) > 1 || Math.abs(message.dy) > 1 || (!message.dx && !message.dy)) return null;
