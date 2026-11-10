@@ -36,6 +36,12 @@ export default {
     if (!validRoomId(roomId)) return json({ error: "Room code must contain 3–24 letters, numbers, underscores or hyphens." }, 400);
     if (!name) return json({ error: "Player name must contain 2–16 letters, numbers, spaces, underscores or hyphens." }, 400);
 
+    const clientIp = request.headers.get("CF-Connecting-IP");
+    if (clientIp && env.ROOM_CONNECT_LIMIT) {
+      const { success } = await env.ROOM_CONNECT_LIMIT.limit({ key: clientIp });
+      if (!success) return json({ error: "Too many room connection attempts. Wait and try again." }, 429);
+    }
+
     const id = env.REALM_ROOMS.idFromName(roomId.toLowerCase());
     return env.REALM_ROOMS.get(id).fetch(request);
   }
