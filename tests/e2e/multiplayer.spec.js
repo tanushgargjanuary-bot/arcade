@@ -101,6 +101,21 @@ test("server rejects missing origins and non-WebSocket room requests", async ({ 
   expect(noUpgrade.status()).toBe(426);
 });
 
+test("Realm generates a random room code and copies a reusable invite link", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/realm.html");
+  const generated = await page.locator("#room-code").inputValue();
+  expect(generated).toMatch(/^r-[a-f0-9]{16}$/);
+
+  await page.getByRole("button", { name: /copy invite link/i }).click();
+  await expect(page.locator("#connection-status")).toContainText("Invite link copied");
+  const invite = await page.evaluate(() => navigator.clipboard.readText());
+  expect(invite).toContain("?room=" + generated);
+
+  await page.goto("/realm.html?room=invite-code-123");
+  await expect(page.locator("#room-code")).toHaveValue("invite-code-123");
+});
+
 test("Realm explains when the project server endpoint is not configured", async ({ page }) => {
   await page.goto("/realm.html");
   await expect(page.locator("#connection-status")).toContainText("server is not configured");
