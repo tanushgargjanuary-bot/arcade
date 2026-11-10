@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 const WORKER_ORIGIN = "http://127.0.0.1:8787";
 const ROOM = "robust-room-01";
 
-async function createPlayer(browser, displayName) {
+async function createPlayer(browser, displayName, roomCode = ROOM) {
   const context = await browser.newContext();
   await context.route("**/src/multiplayer-config.js", (route) => route.fulfill({
     status: 200,
@@ -13,7 +13,7 @@ async function createPlayer(browser, displayName) {
   const page = await context.newPage();
   await page.goto("/realm.html");
   await page.locator("#player-name").fill(displayName);
-  await page.locator("#room-code").fill(ROOM);
+  await page.locator("#room-code").fill(roomCode);
   await page.getByRole("button", { name: /join realm/i }).click();
   await expect(page.locator("#connection-status")).toContainText("Connected to room " + ROOM, { timeout: 15000 });
   return { context, page };
@@ -52,7 +52,7 @@ test("two browsers share server-authoritative presence, movement, chat and leave
 });
 
 test("server rejects spoofed state messages and limits chat", async ({ browser }) => {
-  const player = await createPlayer(browser, "Owner");
+  const player = await createPlayer(browser, "Owner", "robust-room-02");
   const { page } = player;
 
   const spoofResult = await page.evaluate((workerOrigin) => new Promise((resolve, reject) => {
