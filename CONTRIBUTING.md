@@ -35,7 +35,7 @@ The browser suite starts a local static server and Wrangler Worker. It tests two
 - Bound payload sizes and message rates.
 - Use room capacity limits.
 - Do not treat Origin checks as authentication.
-- Do not treat room codes as passwords.
+- Treat invite links as bearer secrets. Do not treat them as proof of identity.
 - Test disconnects, reconnects, malformed frames and concurrent actions.
 - Document any provider quota or operating cost.
 
