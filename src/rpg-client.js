@@ -143,6 +143,7 @@ $("#leave").addEventListener("click", () => {
   const current = socket;
   socket = null;
   stopMovement();
+  if (current?.readyState === WebSocket.OPEN) current.send(JSON.stringify({ type: "leave" }));
   current?.close(1000, "Player left");
   layout.hidden = true;
   joinPanel.hidden = false;
