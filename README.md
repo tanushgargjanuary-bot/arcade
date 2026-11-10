@@ -1,52 +1,60 @@
 # Arcade
 
-A free browser-game collection. The platform includes Neon Dodge, Snake, 2048 and Minesweeper.
+A browser-game collection hosted on GitHub Pages. It includes solo arcade and puzzle games plus a room-based multiplayer RPG prototype.
 
 **Play:** https://tanushgargjanuary-bot.github.io/arcade/
 
-## Play
+## Games
 
-Open the site and choose a game. No account is required. Snake uses arrow keys or WASD. 2048 uses arrows, WASD or swipe. Minesweeper uses left click to reveal and right click to flag. Neon Dodge has its own keyboard and touch controls.
+| Game | Mode | What you do |
+|---|---|---|
+| Neon Dodge | Solo | Dodge hazards and collect energy |
+| Snake | Solo | Eat, grow and avoid your tail |
+| 2048 | Solo | Merge tiles |
+| Minesweeper | Solo | Clear the board without hitting a mine |
+| Realm RPG | Multiplayer prototype | Join a room, move with other players, chat and fight a shared boss |
+
+Realm RPG requires a separately deployed Cloudflare Worker. If the server URL is not configured, the page displays setup instructions. Read [Multiplayer setup](docs/MULTIPLAYER-SETUP.md).
 
 ## Player data
 
-Arcade stores scores and play statistics in the current browser. It does not send player data to a server.
+Solo scores and play statistics stay in the current browser's localStorage. Use **Export** to download a JSON backup. Use **Import** to restore or merge a backup. Clearing browser data can erase local progress.
 
-Use **Export** to download a JSON backup. Use **Import** to load that backup in another browser or device. Import merges records and keeps the higher score, play count and play time for each game. Keep backup files private if you do not want to share your play history.
+Realm RPG currently uses temporary display names. It does not have accounts or persistent characters. Shared boss health is stored by the room server. Player XP and chat history are temporary.
 
-Browser storage is local to a browser profile. Clearing site data can remove it. Export backups before clearing browser data or changing devices. There are no accounts, automatic cross-device sync, public leaderboards or server-verified scores.
+## Technology
 
-## Deployment
+- Static client: HTML, CSS and JavaScript.
+- Hosting: GitHub Pages.
+- Solo progress: browser localStorage.
+- Multiplayer: Cloudflare Workers, Durable Objects and WebSockets.
+- Quality checks: Node.js tests, syntax checks and Playwright browser tests.
 
-The workflow validates pull requests and deploys updates from `main`. The repository owner must enable Pages once: open **Settings → Pages → Build and deployment**, then select **GitHub Actions** as the source.
+## Development
 
-## Local development
+Requires Node.js 20+ and Python 3 for the local static server.
 
-Requires Node.js 20+ for tests. No build step is required.
-
-```bash
-npm test
-python -m http.server 8000
-```
+    npm install
+    npm test
+    npx playwright install chromium
+    npm run test:e2e
+    python -m http.server 8000
 
 Open http://localhost:8000.
 
-## Project layout
+Deploy the multiplayer Worker separately. Follow [Multiplayer setup](docs/MULTIPLAYER-SETUP.md).
 
-```text
-src/                  # App, catalogue, game logic and local storage
-assets/               # Static assets
-docs/                 # Architecture and roadmap
-tests/                # Automated tests
-index.html            # Lobby
-neon-dodge.html       # Standalone Neon Dodge
-game.js/styles.css    # Neon Dodge assets
-app.css               # Lobby and game styling
-```
+## Project knowledge base
+
+Start at [docs/INDEX.md](docs/INDEX.md). It links the architecture, goals, project history, game design, roadmap, testing, multiplayer setup, operations and security documents.
+
+## Project status
+
+The solo games and GitHub Pages deployment are live. The Realm RPG client and server source are implemented, but multiplayer is not live until a maintainer deploys the Worker, configures the client endpoint and verifies two-player interaction.
 
 ## Contributing
 
-Keep game code independent. Return cleanup functions from mounted games. Add tests and update docs when behaviour changes. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Every meaningful feature must include tests, documentation and a review of security and cost impact.
 
 ## License
 
