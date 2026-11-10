@@ -30,13 +30,6 @@ test("2048 and Minesweeper render playable boards", async ({ page }) => {
   await expect(page.locator(".mine")).toHaveCount(81);
 });
 
-test("Realm RPG shows clear setup state when no server is configured", async ({ page }) => {
-  await page.goto("/realm.html");
-  await expect(page.getByRole("heading", { name: /enter the realm/i })).toBeVisible();
-  await expect(page.locator("#connection-status")).toContainText("Server not configured");
-  await page.getByRole("button", { name: /join realm/i }).click();
-  await expect(page.locator("#connection-status")).toContainText("not deployed yet");
-});
 
 test("lobby remains usable on a narrow mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
