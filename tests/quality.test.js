@@ -28,6 +28,7 @@ test("server validates message schemas, size, origin and rate limits", async () 
   const worker = await read("worker/src/index.js");
   const rules = await read("worker/src/game-rules.js");
   assert.match(worker, /allowedOrigin/);
+  assert.match(worker, /ROOM_CONNECT_LIMIT/);
   assert.match(worker, /parseClientMessage/);
   assert.match(worker, /MAX_INVALID_MESSAGES/);
   assert.match(worker, /CHAT_WINDOW_MS/);
