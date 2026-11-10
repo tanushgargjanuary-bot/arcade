@@ -1,1 +1,26 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080b16"><meta name="description" content="A growing library of free browser games."><title>Arcade — Play something.</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css"><script type="module" src="src/main.js"></script></head><body><header class="site-header"><a class="brand" href="./">◈ ARCADE<span>.</span></a><nav><a href="#library">Games</a><a href="#profile">My stats</a></nav><div><span id="connection-status">GUEST MODE</span> <button id="account-button" class="button quiet">Sign in</button></div></header><main id="app" class="app-main">Loading Arcade…</main><footer class="site-footer"><span>ARCADE / VOL. 001</span><span>MADE FOR THE LOVE OF PLAY</span><a href="https://github.com/tanushgargjanuary-bot/arcade">SOURCE CODE ↗</a></footer><div id="modal-root"></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b16">
+  <meta name="description" content="A growing library of free browser games.">
+  <title>Arcade — Play something.</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./">◈ ARCADE<span>.</span></a>
+    <nav><a href="#library">Games</a><a href="#profile">My stats</a></nav>
+    <div class="header-actions">
+      <button id="export-button" class="button quiet">Export</button>
+      <button id="import-button" class="button quiet">Import</button>
+    </div>
+  </header>
+  <main id="app" class="app-main">Loading Arcade…</main>
+  <footer class="site-footer"><span>ARCADE / VOL. 001</span><span>MADE FOR THE LOVE OF PLAY</span><a href="https://github.com/tanushgargjanuary-bot/arcade">SOURCE CODE ↗</a></footer>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+</body>
+</html>
