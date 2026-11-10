@@ -26,7 +26,11 @@ export default {
 export class RealmRoom extends DurableObject {
   constructor(ctx, env) { super(ctx, env); this.ctx = ctx; this.env = env; }
   async fetch(request) {
-    if (this.ctx.getWebSockets().length >= MAX_PLAYERS) return json({ error: "This room is full. Try another room." }, 429);
+    const activeCount = this.ctx.getWebSockets().filter((ws) => {
+      const player = ws.deserializeAttachment();
+      return player && !player.left;
+    }).length;
+    if (activeCount >= MAX_PLAYERS) return json({ error: "This room is full. Try another room." }, 429);
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     const url = new URL(request.url);
@@ -46,6 +50,7 @@ export class RealmRoom extends DurableObject {
   async getEnemy() { return (await this.ctx.storage.get("enemy")) || newEnemy(); }
   getPlayers() {
     return this.ctx.getWebSockets().map((ws) => ws.deserializeAttachment()).filter(Boolean)
+      .filter((player) => !player.left)
       .map(({ id, name, x, y, hp, xp }) => ({ id, name, x, y, hp, xp }));
   }
   broadcast(payload, except = null) {
@@ -63,6 +68,16 @@ export class RealmRoom extends DurableObject {
     try { message = JSON.parse(raw); } catch { return; }
     if (!message || typeof message.type !== "string") return;
     const now = Date.now();
+    if (message.type === "leave") {
+      if (!player.left) {
+        player.left = true;
+        ws.serializeAttachment(player);
+        this.broadcast({ type: "system", text: player.name + " left the realm." }, ws);
+        await this.broadcastState();
+      }
+      try { ws.close(1000, "Player left"); } catch { /* Socket already closed. */ }
+      return;
+    }
     if (message.type === "move") {
       if (now - player.lastMoveAt < 45) return;
       player.lastMoveAt = now;
@@ -95,7 +110,7 @@ export class RealmRoom extends DurableObject {
   }
   async webSocketClose(ws) {
     const player = ws.deserializeAttachment();
-    if (player) this.broadcast({ type: "system", text: player.name + " left the realm." });
+    if (player && !player.left) this.broadcast({ type: "system", text: player.name + " left the realm." });
     await this.broadcastState();
   }
   webSocketError(ws) { try { ws.close(1011, "Connection error"); } catch { /* Closed socket. */ } }
