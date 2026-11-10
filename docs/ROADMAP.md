@@ -12,6 +12,7 @@
 - [x] Room capacity limit.
 - [x] WebSocket heartbeat and bounded reconnect attempts.
 - [x] Empty-room state cleanup.
+- [x] Cryptographically random room codes and shareable invite links.
 - [x] Local Wrangler Durable Object browser integration test.
 - [x] CI dependency audit and failure diagnostics.
 
