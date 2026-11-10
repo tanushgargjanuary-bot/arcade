@@ -1,53 +1,75 @@
 # Operations guide
 
-## Services and dependencies
+## Services
 
-| Component | Role | Deployment / owner |
+| Component | Role | Owner |
 |---|---|---|
-| GitHub Pages | Static lobby and games | GitHub Actions |
-| Trystero | Peer discovery and WebRTC setup | External open-source library |
-| Nostr relays | Public peer discovery/signalling | Third-party relay operators |
-| WebRTC | Direct peer data transport | Player browsers and network paths |
-| Legacy Cloudflare Worker | Previous room server | Retained in source; not used by current client |
+| GitHub Pages | Static client hosting | Repository owner |
+| GitHub Actions | Tests and static deployment | Repository workflow |
+| Cloudflare Worker | WebSocket entry point and origin validation | Project operator |
+| Durable Objects | Authoritative room state and WebSocket sessions | Cloudflare |
+| Browser localStorage | Solo progress | Player |
+
+Players do not need accounts. The project operator needs a Cloudflare account to deploy the Worker.
+
+## Deploy
+
+From the repository root:
+
+    cd worker
+    npx wrangler login
+    npx wrangler deploy
+
+Set the deployed origin in `src/multiplayer-config.js`, then commit and push. Do not add API tokens to source files.
+
+## Health checks
+
+- Worker health: `GET /health`.
+- Room join: WebSocket upgrade to `/room?room=...&name=...`.
+- Worker origin allowlist: `ALLOWED_ORIGINS` in `worker/wrangler.toml`.
+- GitHub Actions: validation must pass before Pages deploy.
+- Cloudflare dashboard: inspect Worker errors, requests, Durable Object usage and plan limits.
+
+A successful Pages deployment does not prove the multiplayer Worker is deployed or healthy.
 
 ## Release process
 
-1. Create a focused branch from main.
-2. Read the project knowledge base and inspect current implementation.
-3. Update tests and documentation with the feature.
-4. Open a pull request.
-5. Wait for unit tests, syntax checks and browser tests.
-6. Review the diff and security impact.
-7. Merge to main.
-8. Confirm the GitHub Pages deployment succeeds.
-9. Run a real two-browser P2P smoke test after networking changes.
+1. Inspect the current implementation and project knowledge base.
+2. Keep changes focused.
+3. Update unit and browser integration tests.
+4. Run dependency audit and syntax checks.
+5. Review security and cost impact.
+6. Merge only after CI passes.
+7. Confirm the Pages deployment.
+8. Check Worker health.
+9. Test two clients on independent networks.
 
-## Health and availability
+## Failure handling
 
-There is no Arcade-owned multiplayer health endpoint. The browser depends on the external Trystero package CDN, public Nostr relays and WebRTC connectivity. A successful GitHub Pages deployment does not prove those dependencies are available.
-
-## Common failures
-
-| Symptom | Check |
+| Symptom | Action |
 |---|---|
-| Trystero module fails to load | CDN availability, browser console and network access |
-| Room remains empty | Both clients must use the same room code and app ID |
-| Players cannot discover each other | Public relay availability, room code, browser network access |
-| Peer discovered but data channel fails | NAT/firewall restrictions; test another network or configure TURN |
-| Chat or state is inconsistent | Browser console, peer disconnects and room leader changes |
-| Boss state resets after leader leaves | Current migration is best-effort; this is a known prototype limitation |
-| Pages deploy fails | GitHub Pages source must be GitHub Actions; inspect Actions logs |
+| Client says server not configured | Set `MULTIPLAYER_ENDPOINT` |
+| HTTP 403 | Check exact Origin allowlist |
+| HTTP 426 | Check WebSocket client and `/room` path |
+| Room full | Current capacity is 16 |
+| Client reconnect loop | Check Worker health, Cloudflare status and browser network |
+| Player returns with zero XP | Expected; identity and XP are temporary |
+| Boss state resets after room is empty | Expected after the 60-second idle cleanup |
+| CI fails dependency audit | Inspect advisory, update or replace affected dependency |
+| Pages deployment fails | Inspect GitHub Actions deployment logs |
 
-## Data recovery
+## Recovery and data
 
-Solo scores are local to each browser. Restore them with a valid JSON backup. Multiplayer room state is temporary and has no central backup or recovery process.
+Solo progress can be restored from a JSON backup. Multiplayer player XP is temporary. Boss state is stored while the room is active and removed after the idle timeout. There is no player account database or persistent character recovery.
 
 ## Incident response
 
-1. Disable or remove the Realm RPG entry if a serious issue affects players.
-2. Check whether the CDN or public discovery relays are unavailable.
-3. Reproduce the issue with two browsers and record the network conditions.
+1. Disable the multiplayer endpoint in the static client if there is an active exploit.
+2. Inspect Worker logs and Cloudflare status.
+3. Identify the affected room and protocol message.
 4. Fix the issue and add a regression test.
-5. Update security and operations documents.
+5. Deploy the Worker.
+6. Publish the matching client.
+7. Update the security and incident notes.
 
-There is no project-owned relay service to restart. Do not promise a service-level uptime for third-party public relays.
+Do not claim an uptime target until monitoring and operational ownership are established.
