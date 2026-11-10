@@ -4,6 +4,8 @@ This directory is the project knowledge base. Read this page first.
 
 | Document | Purpose |
 |---|---|
+| [Project specification](PROJECT-SPEC.md) | Product requirements and scope |
+| [Architecture decisions](DECISIONS.md) | Key technical decisions and trade-offs |
 | [Project history](PROJECT-HISTORY.md) | Why Arcade exists, milestones and decisions |
 | [Architecture](ARCHITECTURE.md) | System components, data flow and boundaries |
 | [Game design](GAME-DESIGN.md) | Game catalogue and rules |
