@@ -2,7 +2,7 @@
 
 ## Product direction
 
-Arcade is a multi-game browser platform. Games should start quickly, work on desktop and mobile where practical, and have clear controls. Solo games should not require accounts. Multiplayer games should use small peer-to-peer rooms in this prototype.
+Arcade provides short browser games with simple controls. Solo games remain local-first. Multiplayer games use small rooms with server-authoritative shared state. No player account is required.
 
 ## Current catalogue
 
@@ -12,42 +12,34 @@ Arcade is a multi-game browser platform. Games should start quickly, work on des
 | Snake | Solo arcade | WASD/arrows | Local score and play stats |
 | 2048 | Solo puzzle | WASD/arrows/swipe | Local score and play stats |
 | Minesweeper | Solo logic | Click/reveal, right-click/flag | Local completion score |
-| Realm RPG | P2P co-op prototype | WASD/arrows, Space, chat form | Temporary peer-shared room state |
+| Realm RPG | Server-authoritative co-op | WASD/arrows, Space, chat | Temporary room XP |
 
-## Realm RPG: current loop
+## Realm RPG loop
 
-1. Choose a display name and room code.
-2. Join the same room as another player.
-3. Trystero discovers peers through public Nostr relays.
-4. Browsers establish direct WebRTC data channels where network conditions allow.
-5. See connected players in a shared 2D room.
-6. Move with WASD or arrow keys.
-7. Send chat messages to the room.
-8. Move within range of the Moss Titan and press Space to attack.
-9. The elected room leader checks range and cooldown, then publishes the shared boss state.
-10. The player who lands the final accepted hit receives 25 temporary XP. The boss respawns at full HP.
+1. Enter a display name and room code.
+2. Join the same room as friends.
+3. The Worker assigns a temporary player ID.
+4. The server sends the authoritative player list and boss state.
+5. Move with WASD or arrow keys. The server calculates the position.
+6. Chat with the room. The server validates and attributes the message.
+7. Move within range of the Moss Titan and press Space.
+8. The server checks range and cooldown, applies damage and awards 25 XP for a defeat.
+9. The server broadcasts the new state.
 
-There is no guaranteed room capacity. Keep groups small because each browser maintains peer connections.
+## Prototype limits
 
-## Deliberate prototype limits
-
-- No login or account identity.
+- No player login or persistent identity.
 - No saved character, inventory, equipment or quests.
-- No NPC dialogue or world map.
-- No matchmaking or room browser.
-- No private messages, voice chat or moderation dashboard.
-- No reconnect/resume of player XP.
-- No anti-cheat identity system.
-- No trusted server authority.
-- No guarantee of connectivity behind restrictive NATs without TURN.
-- No promise of public relay availability.
+- No global matchmaking or room browser.
+- No moderation, mute, block or reporting.
+- No player-to-player trading.
+- No ranked or prize-based play.
+- No MMO-scale capacity claim.
 
-## Future game design
+## Next game systems
 
-1. Improve peer-state reconciliation and room leader handover.
-2. Add mobile touch controls and accessibility options.
-3. Add a moderation and reporting workflow before public chat growth.
-4. Add inventory, quests, equipment and more co-op encounters.
-5. Evaluate an optional trusted backend only if persistent characters or competitive play need it.
-
-Each addition needs tests, a threat review and documentation.
+1. Add mobile controls and accessibility.
+2. Add room invite links with high-entropy codes.
+3. Add moderation and reporting.
+4. Add quests and more co-op encounters.
+5. Consider optional device-bound recovery if persistent characters become necessary.
