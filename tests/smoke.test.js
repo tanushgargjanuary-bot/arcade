@@ -43,11 +43,12 @@ test("local-first app has no cloud account dependencies", async () => {
 });
 
 test("recordRun stores valid statistics", () => {
+  localStorage.setItem("neon-dodge-best", "900");
   recordRun("snake", 25, 12);
   recordRun("snake", 10, 8);
   const data = readLocal();
   assert.deepEqual(data.games.snake, { best: 25, plays: 2, totalSeconds: 20 });
-  assert.deepEqual(stats(data), { played: 2, best: 25, seconds: 20 });
+  assert.deepEqual(stats(data), { played: 2, best: 900, seconds: 20 });
 });
 
 test("export and import preserve progress and do not lower existing records", () => {
@@ -60,6 +61,8 @@ test("export and import preserve progress and do not lower existing records", ()
   assert.equal(data.games.snake.best, 60);
   assert.equal(data.games.snake.plays, 2);
   assert.equal(data.games["2048"].best, 128);
+  assert.equal(data.neonDodgeBest, 900);
+  assert.equal(localStorage.getItem("neon-dodge-best"), "900");
 });
 
 test("import rejects unknown versions and malformed records", () => {
