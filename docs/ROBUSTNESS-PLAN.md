@@ -61,9 +61,9 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 ## Phase 4 — Supply chain and release safety
 
 - Commit a generated npm lockfile and use deterministic installs.
-- Pin GitHub Actions to immutable commit SHAs.
-- Add automated dependency update review.
-- CodeQL static analysis workflow added; successful analysis evidence is still pending.
+- [x] Pin GitHub Actions to immutable commit SHAs.
+- [x] Add automated dependency update review.
+- [x] Configure CodeQL static analysis workflow; the current analysis run is pending.
 - Add secret scanning.
 - Add accessibility and broken-link checks.
 - Require successful integration tests before deployment.
