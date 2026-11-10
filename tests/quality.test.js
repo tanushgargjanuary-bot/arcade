@@ -43,7 +43,7 @@ test("multiplayer chat is rendered as text, not HTML", async () => {
 });
 
 test("project docs cover scope, setup, security and operations", async () => {
-  for (const path of ["README.md", "docs/ARCHITECTURE.md", "docs/ROADMAP.md", "docs/PROJECT-HISTORY.md", "docs/TESTING.md", "docs/MULTIPLAYER-SETUP.md", "docs/SECURITY.md", "docs/OPERATIONS.md"]) {
+  for (const path of ["README.md", "docs/ARCHITECTURE.md", "docs/ROADMAP.md", "docs/PROJECT-HISTORY.md", "docs/TESTING.md", "docs/MULTIPLAYER-SETUP.md", "docs/SECURITY.md", "docs/OPERATIONS.md", "docs/ROBUSTNESS-PLAN.md"]) {
     const content = await read(path);
     assert.ok(content.trim().length > 100, path + " is missing or too short");
   }
