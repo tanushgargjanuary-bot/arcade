@@ -36,7 +36,11 @@ Playwright starts a local static server and a local Wrangler Worker with Durable
 - generated room codes use cryptographic randomness and invite links restore the room;
 - the health route responds;
 - requests without an allowed origin are rejected;
-- non-WebSocket room requests are rejected.
+- non-WebSocket room requests are rejected;
+- spoofed state fields are rejected;
+- per-player chat limits are enforced;
+- the 16-player room capacity is enforced;
+- random room codes and invite links work.
 
 This is a real local Worker integration test. It does not prove Cloudflare production deployment, global edge availability, abuse resistance under load or browser behaviour on every network.
 
