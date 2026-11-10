@@ -20,7 +20,7 @@ Realm RPG uses a Cloudflare Worker and one SQLite-backed Durable Object per room
 
 Players do **not** need accounts, passwords or API keys. They join with a temporary display name and room code. The project owner must deploy the Worker once and set its public URL in `src/multiplayer-config.js`. This is an infrastructure account, not a player account.
 
-The server is authoritative for the current game rules. This is stronger than peer-hosted state, but it is not a complete anti-cheat or moderation system. Names are not verified identities. XP is temporary. Room codes are not passwords. Read [Multiplayer setup](docs/MULTIPLAYER-SETUP.md) and [Security](docs/SECURITY.md).
+The server is authoritative for the current game rules. This is stronger than peer-hosted state, but it is not a complete anti-cheat or moderation system. Names are not verified identities. XP is temporary. Treat generated room codes as bearer invite links. Anyone with a link can join. Read [Multiplayer setup](docs/MULTIPLAYER-SETUP.md) and [Security](docs/SECURITY.md).
 
 ## Player data
 
