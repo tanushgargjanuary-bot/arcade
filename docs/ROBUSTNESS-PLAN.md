@@ -28,6 +28,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Malformed-message strike limit.
 - WebSocket heartbeat and bounded reconnect.
 - Empty-room state cleanup.
+- Cryptographically random room codes and shareable invite links.
 - Node tests for hostile payloads and game rules.
 - Playwright integration tests with two browser contexts and a local Durable Object.
 - CI dependency audit and failure artifacts.
