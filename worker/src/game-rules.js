@@ -1,4 +1,4 @@
-export const ROOM_ID_PATTERN = /^[a-zA-Z0-9_-]{3,24}$/;
+export const ROOM_ID_PATTERN = /^[a-zA-Z0-9_-]{8,24}$/;
 export const PLAYER_NAME_PATTERN = /^[\p{L}\p{N} _-]{2,16}$/u;
 export const MAX_PLAYERS = 16;
 export const MAX_MESSAGE_LENGTH = 180;
