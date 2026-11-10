@@ -1,7 +1,7 @@
 const KEY = "arcade.player.v1";
 const FORMAT = "arcade-progress";
 const VERSION = 1;
-const blank = () => ({ games: {}, recent: [], totalSeconds: 0 });
+const blank = () => ({ games: {}, recent: [], totalSeconds: 0, neonDodgeBest: 0 });
 
 function validNumber(value) {
   return Number.isSafeInteger(value) && value >= 0;
@@ -27,14 +27,18 @@ function cleanData(value) {
     games[id] = cleanGame(record);
   }
   const totalSeconds = Number(value.totalSeconds) || 0;
-  if (!validNumber(totalSeconds)) throw new Error("Backup contains an invalid total play time.");
-  return { games, recent: Array.isArray(value.recent) ? value.recent.filter((id) => typeof id === "string" && /^[a-z0-9-]{1,40}$/.test(id)).slice(0, 8) : [], totalSeconds };
+  const neonDodgeBest = Number(value.neonDodgeBest) || 0;
+  if (!validNumber(totalSeconds) || !validNumber(neonDodgeBest)) throw new Error("Backup contains invalid score or time values.");
+  return { games, recent: Array.isArray(value.recent) ? value.recent.filter((id) => typeof id === "string" && /^[a-z0-9-]{1,40}$/.test(id)).slice(0, 8) : [], totalSeconds, neonDodgeBest };
 }
 
 export function readLocal() {
   try {
     const parsed = JSON.parse(localStorage.getItem(KEY) || "{}");
-    return cleanData({ ...blank(), ...parsed });
+    const data = cleanData({ ...blank(), ...parsed });
+    const standaloneBest = Number(localStorage.getItem("neon-dodge-best")) || 0;
+    if (validNumber(standaloneBest)) data.neonDodgeBest = Math.max(data.neonDodgeBest, standaloneBest);
+    return data;
   } catch {
     return blank();
   }
@@ -43,6 +47,7 @@ export function readLocal() {
 function write(data) {
   try {
     localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem("neon-dodge-best", String(data.neonDodgeBest || 0));
   } catch {
     throw new Error("The browser could not save your progress. Check available site storage.");
   }
@@ -65,7 +70,7 @@ export function stats(data = readLocal()) {
   const games = Object.values(data.games);
   return {
     played: games.reduce((sum, game) => sum + game.plays, 0),
-    best: games.reduce((max, game) => Math.max(max, game.best), 0),
+    best: Math.max(data.neonDodgeBest || 0, games.reduce((max, game) => Math.max(max, game.best), 0)),
     seconds: data.totalSeconds || 0
   };
 }
@@ -97,7 +102,7 @@ export function importData(payload) {
   const totalSeconds = Math.max(current.totalSeconds, incoming.totalSeconds,
     Object.values(games).reduce((sum, game) => sum + game.totalSeconds, 0));
   const recent = [...incoming.recent, ...current.recent].filter((id, index, all) => all.indexOf(id) === index).slice(0, 8);
-  const merged = { games, recent, totalSeconds };
+  const merged = { games, recent, totalSeconds, neonDodgeBest: Math.max(current.neonDodgeBest || 0, incoming.neonDodgeBest || 0) };
   write(merged);
   return merged;
 }
