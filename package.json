@@ -1,6 +1,6 @@
 {
   "name": "arcade",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,10 +10,10 @@
     "check": "npm test && npm run check:syntax && npm run test:e2e"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1",
-    "wrangler": "4.54.0"
+    "@playwright/test": "1.65.0",
+    "wrangler": "4.160.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
