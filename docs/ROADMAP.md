@@ -27,7 +27,6 @@
 ## Phase 2 — Abuse and moderation controls
 
 - [ ] Add global room-creation and connection limits.
-- [ ] Add a room secret or high-entropy invite token.
 - [ ] Add mute, block and report controls.
 - [ ] Add moderation policy and abuse response process.
 - [ ] Add connection-level anomaly tests.
