@@ -14,7 +14,7 @@
 
 ## Components
 
-- GitHub Pages serves the lobby and game files.
+- GitHub Pages serves the lobby and game files. Public HTML entry points set a Content Security Policy to restrict scripts, connections, objects and frames.
 - `src/rpg-client.js` handles the Realm interface and WebSocket lifecycle.
 - `src/multiplayer-config.js` contains the public Worker origin. It is not a secret.
 - Cloudflare Worker validates the browser origin, room code, display name and WebSocket upgrade.
