@@ -1,6 +1,6 @@
 # Arcade
 
-A browser-game collection hosted on GitHub Pages. It includes solo arcade and puzzle games plus a peer-to-peer multiplayer RPG prototype.
+Arcade is a browser-game collection hosted on GitHub Pages. It includes solo arcade and puzzle games plus an account-free multiplayer RPG.
 
 **Play:** https://tanushgargjanuary-bot.github.io/arcade/
 
@@ -12,52 +12,51 @@ A browser-game collection hosted on GitHub Pages. It includes solo arcade and pu
 | Snake | Solo | Eat, grow and avoid your tail |
 | 2048 | Solo | Merge tiles |
 | Minesweeper | Solo | Clear the board without hitting a mine |
-| Realm RPG | Peer-to-peer multiplayer | Join a room, move with other players, chat and fight a shared boss |
+| Realm RPG | Multiplayer co-op | Join a room, move, chat and fight a shared boss |
 
-## Multiplayer
+## Multiplayer model
 
-Realm RPG uses [Trystero](https://github.com/dmotz/trystero) and WebRTC. It uses public peer-discovery infrastructure. You do not need to create a Cloudflare, Supabase or Firebase account. You do not need to deploy a dedicated game server or enter an API key.
+Realm RPG uses a Cloudflare Worker and one SQLite-backed Durable Object per room. The server controls player positions, chat limits, attack range, attack cooldowns, boss health and XP awards.
 
-Players enter the same room code. Trystero discovers peers through its public Nostr strategy. After discovery, game messages travel directly between peers. The room leader coordinates shared boss damage. This is a prototype, not a secure authoritative game server.
+Players do **not** need accounts, passwords or API keys. They join with a temporary display name and room code. The project owner must deploy the Worker once and set its public URL in `src/multiplayer-config.js`. This is an infrastructure account, not a player account.
 
-**Limitations:** Public discovery services can be unavailable. Some network combinations need a TURN relay and may fail without one. Room codes are public, player names are not verified, and clients can manipulate game state. There are no persistent characters, accounts, global matchmaking or moderation tools.
-
-See [Multiplayer setup](docs/MULTIPLAYER-SETUP.md) for connection details and troubleshooting.
+The server is authoritative for the current game rules. This is stronger than peer-hosted state, but it is not a complete anti-cheat or moderation system. Names are not verified identities. XP is temporary. Room codes are not passwords. Read [Multiplayer setup](docs/MULTIPLAYER-SETUP.md) and [Security](docs/SECURITY.md).
 
 ## Player data
 
 Solo scores and play statistics stay in the current browser's localStorage. Use **Export** to download a JSON backup. Use **Import** to restore or merge a backup. Clearing browser data can erase local progress.
 
-Realm RPG does not create accounts or store persistent player profiles. Room presence, chat and game state are temporary. Peer discovery uses public relays, which may observe connection metadata and room discovery activity. Do not share personal information.
+Realm RPG uses temporary server-generated connection IDs. It does not create player accounts or persistent character profiles. Player presence, chat and XP exist only while the room session is active. Boss health is stored in the Durable Object and is cleared after the room remains empty for 60 seconds.
 
 ## Technology
 
 - Static client: HTML, CSS and JavaScript.
 - Hosting: GitHub Pages.
 - Solo progress: browser localStorage.
-- Multiplayer: Trystero and WebRTC, with public peer discovery.
-- Quality checks: Node.js tests, syntax checks and Playwright browser tests.
-- Legacy backend: the previous Cloudflare Worker implementation remains in `worker/` for reference and regression tests. The current Realm client does not use it.
+- Multiplayer: Cloudflare Workers, Durable Objects and WebSockets.
+- Tests: Node.js unit tests and Playwright browser tests against a local Wrangler Durable Object.
+- Dependency audit: npm audit in CI.
 
 ## Development
 
-Requires Node.js 20+ and Python 3 for the local static server.
+Requires Node.js 20+ and Python 3.
 
     npm install
     npm test
+    npm run check:syntax
     npx playwright install chromium
     npm run test:e2e
     python -m http.server 8000
 
-Open http://localhost:8000.
+Open http://localhost:8000. The multiplayer integration tests start a local Worker automatically.
 
 ## Project knowledge base
 
-Start at [docs/INDEX.md](docs/INDEX.md). It links the architecture, goals, project history, game design, roadmap, testing, multiplayer setup, operations and security documents.
+Start at [docs/INDEX.md](docs/INDEX.md). Read [docs/ROBUSTNESS-PLAN.md](docs/ROBUSTNESS-PLAN.md) for the staged reliability and security programme.
 
-## Project status
+## Current status
 
-The solo games and GitHub Pages deployment are live. Realm RPG now uses Trystero P2P discovery and WebRTC. The browser client no longer needs a project-owned multiplayer server. Real-world connectivity still depends on public discovery relays, browser WebRTC support and network NAT/firewall conditions. CI tests the client integration and local game rules; a live multi-network test is still required before calling connectivity production-ready.
+The static game lobby is hosted on GitHub Pages. The multiplayer client now uses an authoritative WebSocket protocol. The Worker is implemented and covered by local Durable Object integration tests. Live multiplayer remains unavailable until the project owner deploys the Worker and sets `MULTIPLAYER_ENDPOINT`.
 
 ## Contributing
 
