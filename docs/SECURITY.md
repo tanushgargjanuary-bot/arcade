@@ -12,6 +12,7 @@
 ## Multiplayer controls
 
 - The Worker checks the exact browser Origin against an allowlist.
+- Public HTML pages use a restrictive Content Security Policy. Scripts are limited to the same origin; object embedding is disabled.
 - Each room has a 16-player limit.
 - The server creates a temporary UUID for each connection.
 - The client sends movement intent, not coordinates.
