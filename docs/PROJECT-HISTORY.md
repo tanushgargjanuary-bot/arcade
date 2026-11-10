@@ -31,7 +31,7 @@ Arcade is a single public website for small browser games. The project aims to m
 - Added Realm RPG client and Cloudflare Durable Object room server.
 - Added shared player presence, movement, live chat and a shared boss encounter.
 - Added server-side validation for room names, player names, chat length, movement bounds, room capacity and attack cooldown/range.
-- Added Node unit tests and Playwright browser tests.
+- Added Node unit tests and Playwright browser tests, including two-client room, movement, chat, boss-combat and disconnect coverage.
 - Added project history, game design, setup, architecture, testing, security and operations guides.
 
 ## Current status
