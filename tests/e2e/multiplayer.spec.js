@@ -87,6 +87,53 @@ test("server rejects spoofed state messages and limits chat", async ({ browser }
   await player.context.close();
 });
 
+
+test("Durable Object enforces the room player capacity", async ({ page }) => {
+  await page.goto("/realm.html");
+  const outcomes = await page.evaluate((workerOrigin) => new Promise(async (resolve, reject) => {
+    const room = "capacity-room-2026";
+    const sockets = [];
+    const results = [];
+    try {
+      for (let index = 0; index < 17; index += 1) {
+        const url = new URL("/room", workerOrigin);
+        url.protocol = "ws:";
+        url.searchParams.set("room", room);
+        url.searchParams.set("name", "Player" + String(index).padStart(2, "0"));
+        const ws = new WebSocket(url);
+        sockets.push(ws);
+        const result = await new Promise((done) => {
+          let settled = false;
+          const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            done(value);
+          };
+          const timer = setTimeout(() => finish("timeout"), 6000);
+          ws.addEventListener("message", (event) => {
+            try {
+              if (JSON.parse(event.data).type === "welcome") finish("joined");
+            } catch { /* Ignore non-protocol data. */ }
+          });
+          ws.addEventListener("error", () => finish("rejected"));
+          ws.addEventListener("close", () => finish("rejected"));
+        });
+        results.push(result);
+      }
+      resolve(results);
+    } catch (error) {
+      reject(error);
+    } finally {
+      for (const ws of sockets) {
+        try { ws.close(); } catch { /* Already closed. */ }
+      }
+    }
+  }), WORKER_ORIGIN);
+  expect(outcomes.filter((result) => result === "joined")).toHaveLength(16);
+  expect(outcomes[16]).toBe("rejected");
+});
+
 test("server rejects missing origins and non-WebSocket room requests", async ({ request }) => {
   const health = await request.get(WORKER_ORIGIN + "/health");
   expect(health.ok()).toBeTruthy();
