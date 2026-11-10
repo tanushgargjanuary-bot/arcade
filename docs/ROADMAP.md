@@ -43,11 +43,11 @@
 ## Phase 4 — Platform hardening
 
 - [ ] Add lockfile and deterministic dependency installation.
-- [ ] Pin GitHub Actions to immutable commit SHAs.
+- [x] Pin GitHub Actions to immutable commit SHAs.
 - [x] Add CodeQL static analysis workflow.
 - [ ] Add secret scanning.
 - [ ] Add automated accessibility checks.
-- [ ] Add dependency update automation.
+- [x] Add dependency update automation.
 - [ ] Add production uptime and error monitoring.
 - [ ] Run load tests and a focused security review.
 
