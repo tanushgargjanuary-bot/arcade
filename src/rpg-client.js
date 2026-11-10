@@ -317,7 +317,7 @@ function startMovement() {
   moveTimer = setInterval(() => {
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
     const now = Date.now();
-    if (now - lastMoveAt < 55) return;
+    if (now - lastMoveAt < 100) return;
     let dx = 0, dy = 0;
     if (keys.has("arrowleft") || keys.has("a")) dx--;
     if (keys.has("arrowright") || keys.has("d")) dx++;
@@ -326,7 +326,7 @@ function startMovement() {
     if (!dx && !dy) return;
     lastMoveAt = now;
     send({ type: "move", dx, dy });
-  }, 55);
+  }, 100);
 }
 
 function leave() {
