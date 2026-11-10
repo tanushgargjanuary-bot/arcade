@@ -139,7 +139,15 @@ function drawWorld() {
   animationId = requestAnimationFrame(drawWorld);
 }
 $("#connect").addEventListener("click", connect);
-$("#leave").addEventListener("click", () => { socket?.close(1000, "Player left"); socket = null; stopMovement(); });
+$("#leave").addEventListener("click", () => {
+  const current = socket;
+  socket = null;
+  stopMovement();
+  current?.close(1000, "Player left");
+  layout.hidden = true;
+  joinPanel.hidden = false;
+  setStatus("Disconnected. You left the realm.");
+});
 $("#chat-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const input = $("#chat-input");
