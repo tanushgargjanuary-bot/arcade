@@ -10,6 +10,7 @@
 - [x] Strict JSON protocol and bounded message sizes.
 - [x] Per-connection movement, chat and message rate limits.
 - [x] Room capacity limit.
+- [x] Approximate per-IP connection rate limit at the edge.
 - [x] WebSocket heartbeat and bounded reconnect attempts.
 - [x] Empty-room state cleanup.
 - [x] Cryptographically random room codes and shareable invite links.
@@ -26,7 +27,7 @@
 
 ## Phase 2 — Abuse and moderation controls
 
-- [ ] Add global room-creation and connection limits.
+- [ ] Add strict global room-creation and connection quotas. The current per-IP edge limiter is approximate and location-local.
 - [ ] Add mute, block and report controls.
 - [ ] Add moderation policy and abuse response process.
 - [ ] Add connection-level anomaly tests.
