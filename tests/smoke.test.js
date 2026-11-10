@@ -52,6 +52,7 @@ test("recordRun stores valid statistics", () => {
 });
 
 test("export and import preserve progress and do not lower existing records", () => {
+  localStorage.setItem("neon-dodge-best", "900");
   recordRun("snake", 40, 30);
   const backup = exportData();
   recordRun("snake", 60, 45);
