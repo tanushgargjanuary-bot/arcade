@@ -1,46 +1,58 @@
 # Security model and known risks
 
-## Protected data
+## Security goals
 
-- Solo player data remains in localStorage.
-- Exported JSON files contain play history and should be treated as private.
-- The current multiplayer client has no account credentials or API keys.
-- The GitHub repository must not contain player data or private exports.
+- Keep solo player records in the user's browser by default.
+- Do not require player accounts.
+- Keep shared multiplayer state under server control.
+- Reject malformed, oversized and unsupported messages.
+- Limit room size and per-connection message rates.
+- Avoid storing chat or persistent player profiles.
 
-## P2P networking
+## Multiplayer controls
 
-- Trystero uses public Nostr relays for peer discovery and WebRTC signalling.
-- Game messages are sent directly between peers over WebRTC data channels after connection.
-- Room codes are public identifiers, not authentication secrets.
-- Display names are not verified identities.
-- Peer IDs identify temporary connections only.
-- The client validates basic message shapes and lengths. Peers can still send malicious or false state.
-- The room leader checks boss attack range and cooldown, but a malicious leader can falsify shared boss state.
-- The project does not control public relay availability, retention or privacy policies.
-- Some networks need TURN. No TURN relay is configured by default.
+- The Worker checks the exact browser Origin against an allowlist.
+- Each room has a 16-player limit.
+- The server creates a temporary UUID for each connection.
+- The client sends movement intent, not coordinates.
+- The server calculates movement and clamps it to the world.
+- The client sends attack intent, not damage or XP.
+- The server checks attack range and cooldown, applies damage and awards XP.
+- Chat sender identity comes from the server-side socket attachment.
+- Chat length and send rate are bounded.
+- JSON message types and keys use strict allowlists.
+- Malformed messages are counted. Repeated invalid messages close the socket.
+- Per-connection message budgets limit excessive traffic.
+- Idle room boss state expires after 60 seconds with no active players.
+- The client uses a heartbeat and a bounded reconnect schedule.
 
-## Known risks
+## Identity and access limits
 
-- No account authentication or persistent identity.
-- No moderation, mute, block or report workflow.
-- No secure inventory, XP ledger or anti-cheat.
-- No robust consensus protocol for simultaneous boss attacks or leader migration.
-- No server-side rate limits. Client-side limits can be bypassed.
-- Public room codes can be guessed or shared.
-- Public discovery infrastructure can observe metadata such as room announcements and network connection information.
-- WebRTC connection failure is possible behind restrictive NATs and firewalls.
-- No automated penetration test or real-world multi-network reliability test has been completed.
+No player accounts exist. This is deliberate. The server-generated ID proves only that a socket is currently connected. It does not prove a real-world identity or a returning player's identity.
 
-## Before public growth
+Room codes are not passwords. Names can be impersonated. A user can create multiple anonymous sessions. Origin checks are not authentication and do not stop non-browser clients.
 
-Do not add trading, paid items, prizes or ranked competition until the project has:
-- A trusted authority or verifiable state protocol.
-- Authentication and authorization.
-- Strong abuse controls and server-side validation.
-- Chat moderation and reporting.
-- Persistence and recovery.
-- Load, security and network traversal tests.
-- A documented operational owner for relays or TURN infrastructure.
+## Remaining risks
+
+- No global IP reputation or global room-creation rate limit.
+- No chat moderation, mute, block or report tools.
+- No persistent bans or verified identities.
+- No persistent character inventory or XP.
+- No full anti-cheat for movement automation, collusion or abuse of game rules.
+- No formal penetration test.
+- No production load test.
+- Cloudflare plan quotas and availability are external dependencies.
+- A compromised Cloudflare account or Worker deployment can alter all multiplayer state.
+
+## Before competitive or public social features
+
+Do not add trading, paid items, prizes, ranked competition or persistent valuable inventory until the project has:
+- verified player identity or an abuse-resistant alternative;
+- persistent authorization and recovery;
+- moderation and reporting;
+- global abuse controls;
+- stronger audit logs and operational alerts;
+- load and security testing.
 
 ## Reporting
 
