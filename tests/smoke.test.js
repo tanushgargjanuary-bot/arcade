@@ -1,1 +1,50 @@
-import test from"node:test";import assert from"node:assert/strict";import{readFile}from"node:fs/promises";const read=p=>readFile(new URL("../"+p,import.meta.url),"utf8");test("lobby loads app entry point",async()=>{const h=await read("index.html");assert.match(h,/src\/main.js/);assert.match(h,/app.css/)});test("catalogue has a handler for each embedded game",async()=>{const d=await read("src/data.js"),g=await read("src/games.js");for(const id of["snake","2048","minesweeper"])assert.ok(d.includes('id:"'+id+'"')&&g.includes('id==="'+id+'"'));assert.ok(d.includes("neon-dodge"))});test("browser config has no privileged key",async()=>{const c=await read("src/config.js"),s=await read("src/cloud.js");assert.doesNotMatch(c,/SUPABASE_SERVICE_ROLE_KEY|service_role\\s*[:=]/i);assert.doesNotMatch(s,/SUPABASE_SERVICE_ROLE_KEY|service_role\\s*[:=]/i)});test("RLS isolates player saves",async()=>{const q=await read("supabase/schema.sql");assert.match(q,/enable row level security/i);assert.match(q,/auth\.uid\(\)\)=user_id/)});test("security policy treats browser scores as untrusted",async()=>{const q=await read("SECURITY.md");assert.match(q,/user-controlled/i);assert.match(q,/service_role/i)});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+const read = (path) => readFile(new URL("../" + path, import.meta.url), "utf8");
+
+test("lobby loads app entry point and local data controls", async () => {
+  const html = await read("index.html");
+  assert.match(html, /src\/main.js/);
+  assert.match(html, /id="export-button"/);
+  assert.match(html, /id="import-button"/);
+  assert.match(html, /id="import-file"/);
+});
+
+test("catalogue has a handler for each embedded game", async () => {
+  const data = await read("src/data.js");
+  const games = await read("src/games.js");
+  for (const id of ["snake", "2048", "minesweeper"]) {
+    assert.ok(data.includes('id:"' + id + '"') && games.includes('id==="' + id + '"'));
+  }
+  assert.ok(data.includes("neon-dodge"));
+});
+
+test("local-first app has no cloud account dependencies", async () => {
+  const main = await read("src/main.js");
+  const html = await read("index.html");
+  assert.doesNotMatch(main + html, /supabase|sign in|create account|cloud sync/i);
+});
+
+test("storage supports versioned export and validated merge import", async () => {
+  const storage = await read("src/storage.js");
+  assert.match(storage, /exportData/);
+  assert.match(storage, /importData/);
+  assert.match(storage, /Math\.max\(old\.best, record\.best\)/);
+  assert.match(storage, /payload\.version !== VERSION/);
+});
+
+test("documentation describes local storage limits and backup flow", async () => {
+  const readme = await read("README.md");
+  const architecture = await read("docs/ARCHITECTURE.md");
+  assert.match(readme, /Export/);
+  assert.match(readme, /Clearing site data can remove it/);
+  assert.match(architecture, /user-controlled/);
+});
+
+test("security policy treats browser scores as untrusted", async () => {
+  const security = await read("SECURITY.md");
+  assert.match(security, /user-controlled/i);
+  assert.match(security, /service_role/i);
+});
