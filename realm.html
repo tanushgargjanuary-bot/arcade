@@ -17,7 +17,8 @@
     <section class="realm-heading"><p class="eyebrow">MULTIPLAYER / CO-OP RPG</p><h1>Enter the <span>Realm.</span></h1><p>Meet other players. Explore together. Defeat the Moss Titan.</p></section>
     <section class="realm-join" id="join-panel">
       <label>PLAYER NAME<input id="player-name" maxlength="16" value="Guest" autocomplete="nickname"></label>
-      <label>ROOM CODE<input id="room-code" maxlength="24" value="lobby" autocomplete="off"></label>
+      <label>ROOM CODE<input id="room-code" maxlength="24" value="" placeholder="Generated room code" autocomplete="off"></label>
+      <button id="copy-invite" class="button quiet" type="button">COPY INVITE LINK</button>
       <button id="connect" class="button primary">JOIN REALM ↗</button>
       <p id="connection-status" role="status">Checking multiplayer server configuration…</p>
     </section>
