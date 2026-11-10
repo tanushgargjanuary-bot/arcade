@@ -25,7 +25,9 @@ let moveTimer = null;
 let animationId = 0;
 let heartbeatTimer = null;
 let connectTimeout = null;
+let welcomeTimeout = null;
 let reconnectTimer = null;
+let connectedAt = 0;
 let reconnectAttempt = 0;
 let lastPongAt = 0;
 let lastMoveAt = 0;
@@ -145,7 +147,7 @@ function handleMessage(raw) {
     applyPlayers(message.players);
     if (!players.has(playerId)) applyPlayers([...players.values(), message.player]);
     joinedOnce = true;
-    reconnectAttempt = 0;
+    connectedAt = Date.now();
     joinPanel.hidden = true;
     layout.hidden = false;
     setStatus("Connected to room " + roomCode + ".");
@@ -218,7 +220,7 @@ function scheduleReconnect() {
     }
     return;
   }
-  const delay = RECONNECT_DELAYS[reconnectAttempt++];
+  const delay = RECONNECT_DELAYS[reconnectAttempt++] + Math.floor(Math.random() * 400);
   setStatus("Connection lost. Reconnecting in " + Math.ceil(delay / 1000) + "s…");
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
@@ -228,6 +230,7 @@ function scheduleReconnect() {
 
 function openSocket() {
   if (intentionalLeave) return;
+  let receivedWelcome = false;
   if (!MULTIPLAYER_ENDPOINT) {
     setStatus("Multiplayer server is not configured. See docs/MULTIPLAYER-SETUP.md.");
     return;
@@ -251,11 +254,24 @@ function openSocket() {
     if (current !== socket) return;
     if (connectTimeout) clearTimeout(connectTimeout);
     connectTimeout = null;
+    welcomeTimeout = setTimeout(() => {
+      if (current === socket && !receivedWelcome) current.close(4002, "Server welcome timeout");
+    }, 10000);
     setStatus("Connected to server. Joining room…");
   });
 
   current.addEventListener("message", (event) => {
-    if (current === socket) handleMessage(event.data);
+    if (current !== socket) return;
+    if (typeof event.data === "string") {
+      try {
+        if (JSON.parse(event.data).type === "welcome") {
+          receivedWelcome = true;
+          if (welcomeTimeout) clearTimeout(welcomeTimeout);
+          welcomeTimeout = null;
+        }
+      } catch { /* handleMessage performs the protocol parse. */ }
+    }
+    handleMessage(event.data);
   });
 
   current.addEventListener("error", () => {
@@ -266,7 +282,11 @@ function openSocket() {
     if (current !== socket) return;
     socket = null;
     if (connectTimeout) clearTimeout(connectTimeout);
+    if (welcomeTimeout) clearTimeout(welcomeTimeout);
     connectTimeout = null;
+    welcomeTimeout = null;
+    if (connectedAt && Date.now() - connectedAt >= 30000) reconnectAttempt = 0;
+    connectedAt = 0;
     stopHeartbeat();
     stopMovement();
     if (!intentionalLeave) {
@@ -298,8 +318,11 @@ function connect() {
     setStatus("Multiplayer server is not configured. See docs/MULTIPLAYER-SETUP.md.");
     return;
   }
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = null;
   intentionalLeave = false;
   joinedOnce = false;
+  connectedAt = 0;
   reconnectAttempt = 0;
   playerId = null;
   players.clear();
@@ -336,7 +359,10 @@ function leave() {
   stopHeartbeat();
   stopMovement();
   if (connectTimeout) clearTimeout(connectTimeout);
+  if (welcomeTimeout) clearTimeout(welcomeTimeout);
   connectTimeout = null;
+  welcomeTimeout = null;
+  connectedAt = 0;
   send({ type: "leave" });
   if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "Player left");
   socket = null;
@@ -415,6 +441,7 @@ window.addEventListener("pagehide", () => {
   stopHeartbeat();
   stopMovement();
   if (reconnectTimer) clearTimeout(reconnectTimer);
+  if (welcomeTimeout) clearTimeout(welcomeTimeout);
   cancelAnimationFrame(animationId);
 });
 
