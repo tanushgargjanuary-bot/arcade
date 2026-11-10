@@ -15,7 +15,7 @@ async function createPlayer(browser, displayName, roomCode = ROOM) {
   await page.locator("#player-name").fill(displayName);
   await page.locator("#room-code").fill(roomCode);
   await page.getByRole("button", { name: /join realm/i }).click();
-  await expect(page.locator("#connection-status")).toContainText("Connected to room " + ROOM, { timeout: 15000 });
+  await expect(page.locator("#connection-status")).toContainText("Connected to room " + roomCode, { timeout: 15000 });
   return { context, page };
 }
 
