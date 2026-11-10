@@ -42,11 +42,14 @@ function updateHud() {
     const item = document.createElement("li");
     const label = document.createElement("strong");
     label.textContent = player.name;
+    item.dataset.x = String(player.x);
+    item.dataset.y = String(player.y);
     item.append(label, document.createTextNode(" · HP " + player.hp + " · XP " + player.xp));
     $("#players-list").append(item);
     if (player.id === selfId) xp = player.xp;
   }
   $("#player-xp").textContent = "XP " + xp;
+  $("#boss-hp").textContent = "BOSS HP " + enemy.hp + "/" + enemy.maxHp;
 }
 function handleMessage(event) {
   let message;
