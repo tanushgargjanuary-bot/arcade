@@ -1,15 +1,25 @@
 # Testing and quality gates
 
-## Node unit tests
+## Node tests
 
 Run `npm test`.
 
 Covers:
-- Local progress storage and backup merge behaviour.
-- Legacy Worker game-rule validation and boundaries.
-- Source guardrails for the Realm client and project documentation.
+- Local progress storage and JSON backup validation.
+- Room ID and player name validation.
+- Strict multiplayer message schemas.
+- Malformed and oversized payload rejection.
+- Movement bounds and normalisation.
+- Attack range rules.
+- Catalogue and security documentation guardrails.
 
-## Browser tests
+## Syntax checks
+
+Run `npm run check:syntax`.
+
+This checks JavaScript under `src/` and `worker/src/`, plus the standalone game script.
+
+## Browser and server integration tests
 
 Run:
 
@@ -17,38 +27,38 @@ Run:
     npx playwright install chromium
     npm run test:e2e
 
-Playwright checks:
-- Lobby rendering and category filtering.
-- Solo Snake launch and return navigation.
-- Realm RPG page rendering and the account-free P2P entry flow.
-- The current client imports the pinned Trystero release and does not require a configured server endpoint.
+Playwright starts a local static server and a local Wrangler Worker with Durable Objects. The multiplayer test uses two independent browser contexts. It verifies:
+- both clients join the same room;
+- server presence updates on both clients;
+- chat is attributed by the server;
+- movement is validated and synchronized by the server;
+- explicit leave removes the player;
+- the health route responds;
+- requests without an allowed origin are rejected;
+- non-WebSocket room requests are rejected.
 
-The Realm browser smoke test uses a local test double for the Trystero module. It does not prove that public Nostr relays or real WebRTC connections work.
-
-## Syntax checks
-
-    find src worker/src -name '*.js' -print0 | xargs -0 -n1 node --check
-    node --check game.js
+This is a real local Worker integration test. It does not prove Cloudflare production deployment, global edge availability, abuse resistance under load or browser behaviour on every network.
 
 ## CI
 
-GitHub Actions runs on pull requests and pushes to main. It installs dependencies, runs Node tests, checks JavaScript syntax, installs Chromium and runs Playwright. The Pages deployment job runs only after validation succeeds and only for non-PR events.
+GitHub Actions runs Node tests, syntax checks, dependency audit and Playwright integration tests on pull requests and pushes to main. The Pages deployment job runs only after validation succeeds. The deploy job receives Pages write and OIDC permissions; the validation job receives read-only repository permission.
+
+Playwright diagnostics are uploaded when a test fails and retained for seven days.
 
 ## Manual release checks
 
-Before describing P2P multiplayer as reliable, test:
-- Two separate browsers on the same network.
-- Two browsers on different networks.
-- A mobile network and a Wi-Fi network.
-- Presence, movement, chat and boss health in both directions.
-- Room leader departure and leader handover.
-- A third player joining after the room is active.
-- Public relay failure and reconnect behaviour.
-- Browser console and WebRTC connection errors.
-- Desktop and narrow mobile layouts.
+Before public growth, test:
+- two devices on separate networks;
+- reconnect after Wi-Fi loss;
+- reconnect after a browser sleeps and resumes;
+- full-room rejection;
+- rapid movement, chat and attack requests;
+- malformed JSON and oversized frames;
+- simultaneous attacks near the boss;
+- room cleanup after all players leave;
+- mobile layout and keyboard controls;
+- Cloudflare plan usage and Worker error rates.
 
-## Test limitations
+## Release rule
 
-CI does not contact public Nostr relays or prove real WebRTC connectivity. The browser test mocks the Trystero API. Public relay uptime, NAT traversal, TURN fallback, high concurrency and adversarial peer behaviour require separate manual or dedicated integration testing.
-
-The legacy Cloudflare Worker remains in the repository and its rules remain covered by Node tests. It is not used by the current Realm client.
+Do not claim production-grade multiplayer because unit tests pass. Require real cross-network tests, operational monitoring and an abuse review.
