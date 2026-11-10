@@ -15,7 +15,7 @@ ALLOWED_ORIGINS = "https://tanushgargjanuary-bot.github.io,http://127.0.0.1:4173
 
 [[ratelimits]]
 name = "ROOM_CONNECT_LIMIT"
-namespace_id = "1001"
+namespace_id = "20261110" # Use a unique namespace ID in your Cloudflare account.
 
 [ratelimits.simple]
 limit = 30
