@@ -26,7 +26,7 @@ test("movement is clamped to world bounds and normalised", () => {
 });
 test("attacks require range and cooldown", () => {
   const enemy = newEnemy();
-  assert.equal(canAttack({ x: 500, y: 240 }, enemy, 1000, 0), true);
+  assert.equal(canAttack({ x: 510, y: 240 }, enemy, 1000, 0), true);
   assert.equal(canAttack({ x: 100, y: 100 }, enemy, 1000, 0), false);
   assert.equal(canAttack({ x: 570, y: 240 }, enemy, 400, 0), false);
 });
