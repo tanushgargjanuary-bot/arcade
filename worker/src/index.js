@@ -2,7 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 import {
   validRoomId, cleanPlayerName, parseClientMessage, movePlayer, canAttack,
   newEnemy, publicPlayer, MAX_PLAYERS, MOVE_INTERVAL_MS, ATTACK_COOLDOWN_MS,
-  CHAT_WINDOW_MS, MAX_CHAT_PER_WINDOW, MAX_INVALID_MESSAGES
+  CHAT_WINDOW_MS, MAX_CHAT_PER_WINDOW, MAX_INVALID_MESSAGES,
+  MESSAGE_WINDOW_MS, MAX_MESSAGES_PER_WINDOW, ROOM_IDLE_TTL_MS
 } from "./game-rules.js";
 
 const JSON_HEADERS = {
@@ -46,6 +47,7 @@ export class RealmRoom extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.messageQueue = Promise.resolve();
+    this.enemyCache = null;
   }
 
   enqueue(task) {
@@ -65,6 +67,7 @@ export class RealmRoom extends DurableObject {
     const url = new URL(request.url);
     const name = cleanPlayerName(url.searchParams.get("name") || "");
     if (!name) return json({ error: "Invalid player name." }, 400);
+    await this.ctx.storage.deleteAlarm();
     const enemy = await this.getEnemy();
 
     // Recheck after storage I/O. No await occurs between this check and acceptWebSocket.
@@ -86,6 +89,8 @@ export class RealmRoom extends DurableObject {
       chatWindowAt: Date.now(),
       chatCount: 0,
       invalidMessages: 0,
+      messageWindowAt: Date.now(),
+      messageCount: 0,
       left: false
     };
 
@@ -104,11 +109,13 @@ export class RealmRoom extends DurableObject {
   }
 
   async getEnemy() {
+    if (this.enemyCache) return this.enemyCache;
     let enemy = await this.ctx.storage.get("enemy");
     if (!enemy) {
       enemy = newEnemy();
       await this.ctx.storage.put("enemy", enemy);
     }
+    this.enemyCache = enemy;
     return enemy;
   }
 
@@ -163,6 +170,17 @@ export class RealmRoom extends DurableObject {
     }
 
     const now = Date.now();
+    if (now - player.messageWindowAt >= MESSAGE_WINDOW_MS) {
+      player.messageWindowAt = now;
+      player.messageCount = 0;
+    }
+    player.messageCount += 1;
+    if (player.messageCount > MAX_MESSAGES_PER_WINDOW) {
+      this.rejectMessage(ws, player, "rate_limited", "Too many messages. Slow down.");
+      return;
+    }
+    ws.serializeAttachment(player);
+
     if (message.type === "ping") {
       this.send(ws, { type: "pong", at: now });
       return;
@@ -173,6 +191,7 @@ export class RealmRoom extends DurableObject {
       ws.serializeAttachment(player);
       this.broadcast({ type: "system", text: player.name + " left the realm." }, ws);
       await this.broadcastState();
+      await this.scheduleCleanupIfEmpty();
       try { ws.close(1000, "Player left"); } catch { /* Already closed. */ }
       return;
     }
@@ -222,6 +241,7 @@ export class RealmRoom extends DurableObject {
       }
       ws.serializeAttachment(player);
       await this.ctx.storage.put("enemy", enemy);
+      this.enemyCache = enemy;
       if (defeated) {
         this.broadcast({ type: "system", text: player.name + " defeated the Moss Titan and earned 25 XP. The Titan returned." });
       }
@@ -238,7 +258,20 @@ export class RealmRoom extends DurableObject {
         this.broadcast({ type: "system", text: player.name + " left the realm." }, ws);
       }
       await this.broadcastState();
+      await this.scheduleCleanupIfEmpty();
     });
+  }
+
+  async scheduleCleanupIfEmpty() {
+    if (this.activeSockets().length === 0) {
+      await this.ctx.storage.setAlarm(Date.now() + ROOM_IDLE_TTL_MS);
+    }
+  }
+
+  async alarm() {
+    if (this.activeSockets().length !== 0) return;
+    await this.ctx.storage.delete("enemy");
+    this.enemyCache = null;
   }
 
   webSocketError(ws) {
