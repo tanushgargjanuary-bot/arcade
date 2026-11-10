@@ -31,7 +31,7 @@
 
 No player accounts exist. This is deliberate. The server-generated ID proves only that a socket is currently connected. It does not prove a real-world identity or a returning player's identity.
 
-Room codes are not passwords. Names can be impersonated. A user can create multiple anonymous sessions. Origin checks are not authentication and do not stop non-browser clients.
+Room codes are bearer invites. Anyone with the code can join. Names can be impersonated. A user can create multiple anonymous sessions. Origin checks are not authentication and do not stop non-browser clients.
 
 ## Remaining risks
 
