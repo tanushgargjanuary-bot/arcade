@@ -1,18 +1,20 @@
 # Operations guide
 
-## Services
+> **Project status: PAUSED — 10 November 2026.** No active operations or production multiplayer service is established. This guide records how to resume deployment and validation.
 
-| Component | Role | Owner |
+## Services and current state
+
+| Component | Role | Current state |
 |---|---|---|
-| GitHub Pages | Static client hosting | Repository owner |
-| GitHub Actions | Tests and static deployment | Repository workflow |
-| Cloudflare Worker | WebSocket entry point and origin validation | Project operator |
-| Durable Objects | Authoritative room state and WebSocket sessions | Cloudflare |
-| Browser localStorage | Solo progress | Player |
+| GitHub Pages | Static client hosting | Deployed |
+| GitHub Actions | Tests and static deployment | Configured; latest recorded validation passed |
+| Cloudflare Worker | WebSocket entry point and origin validation | Implemented; not deployed |
+| Durable Objects | Authoritative room state and WebSocket sessions | Local integration-tested; no production deployment |
+| Browser localStorage | Solo progress | Used by players |
 
-Players do not need accounts. The project operator needs a Cloudflare account to deploy the Worker.
+Players do not need accounts. The project operator needs a Cloudflare account to deploy the Worker. No production multiplayer uptime or support commitment exists.
 
-## Deploy
+## Deploy (when the project resumes)
 
 From the repository root:
 
@@ -20,11 +22,13 @@ From the repository root:
     npx wrangler login
     npx wrangler deploy --config worker/wrangler.toml
 
-Set the deployed origin in `src/multiplayer-config.js`, then commit and push. Do not add API tokens to source files.
+Set the deployed origin in `src/multiplayer-config.js`, then commit and push to `main`. Do not add API tokens to source files.
+
+**Do not perform this deployment as part of routine maintenance while the project is paused.** The steps are recorded for a deliberate restart.
 
 ## Health checks
 
-- Worker health: `GET /health`.
+- Worker health: `GET /health` after deployment.
 - Room join: WebSocket upgrade to `/room?room=...&name=...`.
 - Worker origin allowlist: `ALLOWED_ORIGINS` in `worker/wrangler.toml`.
 - GitHub Actions: validation must pass before Pages deploy.
@@ -43,27 +47,25 @@ The current defaults are designed for small rooms:
 - Room connection attempts are limited to approximately 30 per IP per minute per Cloudflare location.
 - The Durable Object uses the WebSocket Hibernation API. It has no permanent timer loop.
 
-Cloudflare's published Durable Objects Free plan limits currently include 100,000 requests per day and 13,000 GB-seconds per day. Incoming WebSocket messages use a 20:1 billing ratio; outgoing WebSocket messages are not billed as requests. Free-plan operations can fail after a daily limit is reached. Check the [official pricing and limits](https://developers.cloudflare.com/durable-objects/platform/pricing/) before increasing room size or update frequency. These limits can change.
+Cloudflare plan quotas and prices can change. Check the [official pricing and limits](https://developers.cloudflare.com/durable-objects/platform/pricing/) before deployment or increasing room size. Do not assume free-tier capacity is unlimited. A busy 16-player room can use a material share of the daily request allowance.
 
-A 16-player room with every player moving continuously can use a large share of the daily request allowance. Do not increase the 10 Hz update rate without measuring usage.
-
-## Release process
+## Release process (when resumed)
 
 1. Inspect the current implementation and project knowledge base.
-2. Keep changes focused.
+2. Keep changes focused and use `main` as the working branch unless the owner changes this rule.
 3. Update unit and browser integration tests.
 4. Run dependency audit and syntax checks.
 5. Review security and cost impact.
-6. Merge only after CI passes.
+6. Require CI to pass.
 7. Confirm the Pages deployment.
-8. Check Worker health.
+8. Deploy and check Worker health only when production multiplayer is intentionally enabled.
 9. Test two clients on independent networks.
 
 ## Failure handling
 
 | Symptom | Action |
 |---|---|
-| Client says server not configured | Set `MULTIPLAYER_ENDPOINT` |
+| Client says server not configured | Set `MULTIPLAYER_ENDPOINT` after Worker deployment |
 | HTTP 403 | Check exact Origin allowlist |
 | HTTP 426 | Check WebSocket client and `/room` path |
 | Room full | Current capacity is 16 |
@@ -78,6 +80,8 @@ A 16-player room with every player moving continuously can use a large share of 
 Solo progress can be restored from a JSON backup. Multiplayer player XP is temporary. Boss state is stored while the room is active and removed after the idle timeout. There is no player account database or persistent character recovery.
 
 ## Incident response
+
+If multiplayer is enabled in a future release:
 
 1. Disable the multiplayer endpoint in the static client if there is an active exploit.
 2. Inspect Worker logs and Cloudflare status.
