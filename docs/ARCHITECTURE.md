@@ -76,7 +76,7 @@ No player account or persistent profile exists. A reconnect creates a new tempor
 ## Limits and trust boundaries
 
 - Origin checks stop ordinary cross-site browser connections. They are not user authentication.
-- Room codes are public identifiers. They are not passwords or access tokens.
+- Random room codes are high-entropy invite identifiers, not verified user identities. Anyone with the invite can join. Treat them as shareable bearer links.
 - Display names can be impersonated.
 - The server is authoritative for the implemented game rules, but it does not provide a general anti-cheat system.
 - The Worker limits room size and per-connection traffic. It does not yet provide global IP reputation, global room-creation quotas or human moderation.
