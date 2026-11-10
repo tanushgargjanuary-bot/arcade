@@ -9,6 +9,7 @@ import {
 test("room IDs reject malformed and oversized values", () => {
   assert.equal(validRoomId("lobby_01"), true);
   assert.equal(validRoomId("ab"), false);
+  assert.equal(validRoomId("lobby"), false);
   assert.equal(validRoomId("bad room"), false);
   assert.equal(validRoomId("x".repeat(25)), false);
   assert.equal(validRoomId(null), false);
