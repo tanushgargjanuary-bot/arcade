@@ -32,7 +32,7 @@ GitHub Pages serves the static client. Cloudflare Workers routes multiplayer con
 - Empty-room state cleanup.
 - Cryptographically random room codes and shareable invite links.
 - Node tests for hostile payloads and game rules.
-- Playwright integration tests with two browser contexts and a local Durable Object.
+- Playwright integration tests with two browser contexts, capacity overflow and a local Durable Object.
 - CI dependency audit and failure artifacts.
 
 ## Phase 1 — Production readiness
