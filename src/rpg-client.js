@@ -145,6 +145,7 @@ $("#chat-form").addEventListener("submit", (event) => {
 });
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+  if (event.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(event.target.tagName)) return;
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key) && !layout.hidden) event.preventDefault();
   keys.add(key);
   if (key === " " && !layout.hidden) send({ type: "attack" });
