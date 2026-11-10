@@ -1,56 +1,54 @@
 # Project history and intent
 
-## Why this project exists
+## Why Arcade exists
 
-Arcade is a single public website for small browser games. The project aims to make games easy to discover and play without downloads. It also aims to keep the code and hosting simple enough for a small project to maintain.
+Arcade is a single website for browser games. The project aims to make games easy to find and play without downloads. It should remain low-cost, maintainable and privacy-conscious.
 
 ## Goals
 
 1. Keep the game lobby fast and simple.
-2. Host the client as a static site on GitHub Pages.
-3. Keep ordinary player progress private and local by default.
-4. Support optional real-time multiplayer without requiring a project-owned backend account.
-5. Make every meaningful change testable and documented.
-6. Keep operating cost low. Prefer open protocols and free public infrastructure, while documenting their limits.
+2. Host static files on GitHub Pages.
+3. Keep solo progress local by default.
+4. Support multiplayer without player accounts.
+5. Use server authority for shared game state.
+6. Test meaningful behaviour, not only source patterns.
+7. Document real operating costs and security limits.
 
 ## Milestones
 
 ### Foundation
-- Created the Arcade repository and GitHub Pages game lobby.
+- Created the Arcade repository and GitHub Pages lobby.
 - Added Neon Dodge, Snake, 2048 and Minesweeper.
 - Added search, category filters and local game statistics.
 - Added CI validation and GitHub Pages deployment.
 
 ### Local-first data
-- Removed optional Supabase account and cloud-save code.
-- Kept personal records in browser localStorage.
+- Removed cloud account flow for solo progress.
+- Kept personal records in localStorage.
 - Added versioned JSON export and import.
-- Documented browser storage limits and score trust boundaries.
 
 ### First multiplayer architecture
-- Added Realm RPG client and Cloudflare Durable Object room server.
-- Added shared player presence, movement, live chat and a shared boss encounter.
-- Added server-side validation and a two-client local Durable Object integration test.
-- Added project history, game design, setup, architecture, testing, security and operations guides.
+- Added Realm RPG and a Cloudflare Durable Object server.
+- Added server-side player movement, chat, boss combat and XP.
+- Added local Worker integration tests.
 
-### Account-free P2P migration
-- Selected Trystero after evaluating no-account peer-to-peer options.
-- Replaced the Realm client connection path with Trystero 0.25.4 and WebRTC.
-- Removed the requirement to deploy a Cloudflare Worker or configure a provider account.
-- Retained the previous Worker source as legacy reference code during evaluation.
-- Documented public relay, NAT traversal, host migration and trust limitations.
+### Account-free peer networking experiment
+- Replaced the Worker client with Trystero and WebRTC.
+- Found that peer-hosted shared state allowed players to falsify positions, XP and boss state.
+- The P2P implementation was a useful experiment but did not meet the project's robustness goal.
+
+### Return to server authority
+- Reconnected Realm RPG to a Cloudflare Worker and Durable Objects.
+- Made the server authoritative for player state and game rules.
+- Added strict message schemas, payload bounds, rate limits and idle room cleanup.
+- Added two-browser integration tests against a local Durable Object.
+- Added dependency audit and CI failure diagnostics.
+- Kept player accounts out of scope.
 
 ## Current status
 
-Realm RPG uses Trystero's default Nostr discovery strategy and WebRTC data channels. The browser client needs no project-owned backend deployment or account. CI tests a mocked Trystero client flow. Real-world connection reliability still needs manual testing across separate networks.
+The code now uses the authoritative Worker protocol. The project owner must deploy the Worker and set its public URL before live multiplayer works. CI tests the Worker locally with two browser clients. Real multi-network production testing remains required.
 
-## Decisions and trade-offs
+## Direction
 
-- GitHub Pages remains the static client host.
-- The local-first model remains the default for solo game records.
-- Trystero provides account-free peer discovery and WebRTC data transport.
-- Public Nostr relays remove the need to operate a signalling server, but they are external dependencies.
-- One peer coordinates boss state. This is not equivalent to a trusted server.
-- Room codes replace matchmaking in this phase.
-- The RPG is a prototype, not a persistent MMO. No character accounts or inventory database exists.
-- No user data is committed to the GitHub repository.
+The project should prefer the simplest architecture that provides real integrity. Player accounts are not a default requirement. Add identity only when a feature needs persistent ownership, moderation or abuse prevention that anonymous sessions cannot provide.
