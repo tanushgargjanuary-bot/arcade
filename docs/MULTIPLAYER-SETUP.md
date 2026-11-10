@@ -36,7 +36,7 @@ The authoritative game server runs on Cloudflare Workers and Durable Objects. Th
 
 The endpoint is public configuration, not a secret. Do not put API tokens in the browser code.
 
-Cloudflare plan limits and availability can change. Check the current Cloudflare Workers and Durable Objects pricing before public growth. The project does not promise unlimited free hosting.
+Cloudflare plan limits and availability can change. The current Durable Objects Free plan lists 100,000 requests and 13,000 GB-seconds per day. Incoming WebSocket messages count at a 20:1 billing ratio. Free-plan operations fail when a daily limit is exceeded. See the [official pricing page](https://developers.cloudflare.com/durable-objects/platform/pricing/). The current 10 Hz movement cap and 16-player room limit are deliberate cost controls. The project does not promise unlimited free hosting.
 
 ## Join a room
 
