@@ -21,6 +21,7 @@
 - One Durable Object owns each room. It validates messages and controls all shared game state.
 - Durable Object SQLite storage keeps the boss state while a room is active.
 - The room alarm deletes the boss state after 60 seconds with no active players.
+- Movement updates are capped at 10 Hz on the client and approximately 11 Hz on the server to control request volume.
 
 ## Multiplayer trust model
 
