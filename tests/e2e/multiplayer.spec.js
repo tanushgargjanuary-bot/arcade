@@ -25,6 +25,7 @@ test("two browser clients share presence, movement, chat and boss combat", async
   const pageB = await contextB.newPage();
   await useLocalWorker(pageA);
   await useLocalWorker(pageB);
+  let contextAClosed = false;
 
   try {
     await pageA.goto("/realm.html");
@@ -54,14 +55,20 @@ test("two browser clients share presence, movement, chat and boss combat", async
 
     await moveToward(pageA, playerOnA, "x", 570);
     await moveToward(pageA, playerOnA, "y", 240);
+    await expect.poll(async () => {
+      const x = Number(await playerOnA.getAttribute("data-x"));
+      const y = Number(await playerOnA.getAttribute("data-y"));
+      return Math.hypot(x - 570, y - 240);
+    }).toBeLessThan(55);
     await pageA.keyboard.press("Space");
     await expect(pageB.locator("#boss-hp")).toHaveText("BOSS HP 90/100", { timeout: 5000 });
 
     await contextA.close();
+    contextAClosed = true;
     await expect(pageB.locator("#player-count")).toHaveText("1 PLAYER");
     await expect(pageB.locator("#chat-log")).toContainText("Player One left the realm.");
   } finally {
-    await contextA.close();
+    if (!contextAClosed) await contextA.close();
     await contextB.close();
   }
 });
