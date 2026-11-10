@@ -8,8 +8,8 @@
     "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
-    "wrangler": "^4.54.0"
+    "@playwright/test": "1.56.1",
+    "wrangler": "4.54.0"
   },
   "engines": {
     "node": ">=20"
