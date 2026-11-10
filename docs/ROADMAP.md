@@ -1,45 +1,62 @@
-# Roadmap
+# Robustness roadmap
 
 ## Delivered
 
-- [x] Responsive game lobby, search and category filters.
-- [x] Neon Dodge, Snake, 2048 and Minesweeper.
-- [x] Local player statistics and versioned JSON backups.
-- [x] GitHub Pages deployment workflow.
-- [x] Realm RPG client with Trystero 0.25.4 and WebRTC peer networking.
-- [x] Account-free room discovery through the default public Nostr strategy.
-- [x] Peer presence, movement, room chat and room-leader-coordinated boss combat in the client.
-- [x] Project history, game design, setup, architecture, testing, operations and security documentation.
+- [x] Responsive game lobby and solo games.
+- [x] Local-first solo progress with validated JSON backups.
+- [x] Authoritative Cloudflare Worker and one Durable Object per room.
+- [x] Server-generated temporary player IDs.
+- [x] Server-side movement, attack range, cooldown and XP rules.
+- [x] Strict JSON protocol and bounded message sizes.
+- [x] Per-connection movement, chat and message rate limits.
+- [x] Room capacity limit.
+- [x] WebSocket heartbeat and bounded reconnect attempts.
+- [x] Empty-room state cleanup.
+- [x] Local Wrangler Durable Object browser integration test.
+- [x] CI dependency audit and failure diagnostics.
 
-## Required before calling P2P multiplayer reliable
+## Phase 1 — Complete production configuration
 
-- [ ] Verify two players on separate physical devices and networks.
-- [ ] Verify a third player joining an active room.
-- [ ] Test room leader departure and state handover.
-- [ ] Test reconnects and public relay outages.
-- [ ] Test networks that require TURN and decide whether to document or provide a relay.
-- [ ] Run a basic abuse and malformed-message test.
+- [ ] Project owner deploys the Worker.
+- [ ] Configure the deployed Worker origin in `src/multiplayer-config.js`.
+- [ ] Confirm the health endpoint.
+- [ ] Test two real devices on different networks.
+- [ ] Check Cloudflare usage and error metrics.
 
-## Next engineering priorities
+## Phase 2 — Abuse and moderation controls
 
-1. Complete live multi-network WebRTC testing.
-2. Improve peer state reconciliation and room leader handover.
-3. Add mobile virtual controls and accessibility.
-4. Add moderation, mute, block and reporting before public chat growth.
-5. Decide whether to add an optional trusted backend for persistent characters.
-6. Add quests, inventory, equipment and more co-op encounters.
-7. Consider a small-room connection limit based on measured browser performance.
+- [ ] Add global room-creation and connection limits.
+- [ ] Add a room secret or high-entropy invite token.
+- [ ] Add mute, block and report controls.
+- [ ] Add moderation policy and abuse response process.
+- [ ] Add connection-level anomaly tests.
 
-## Explicit non-goals for this phase
+## Phase 3 — Recovery and data integrity
 
-- No MMO-scale world.
-- No accounts or password storage.
-- No global matchmaking.
-- No player-to-player trading.
-- No voice chat.
-- No ranked or prize-based competition.
-- No guarantee of free or permanent public relay availability.
+- [ ] Add protocol version negotiation and migration tests.
+- [ ] Add durable room event sequence numbers.
+- [ ] Add crash and reconnect tests.
+- [ ] Decide which character data, if any, should persist.
+- [ ] If persistence is added, use optional device-bound recovery or passkeys before requiring full accounts.
+
+## Phase 4 — Platform hardening
+
+- [ ] Add lockfile and deterministic dependency installation.
+- [ ] Pin GitHub Actions to immutable commit SHAs.
+- [ ] Add static analysis and secret scanning.
+- [ ] Add automated accessibility checks.
+- [ ] Add dependency update automation.
+- [ ] Add production uptime and error monitoring.
+- [ ] Run load tests and a focused security review.
+
+## Explicit non-goals
+
+- No mandatory player accounts.
+- No payments, trading or prize systems.
+- No competitive rankings until identity and anti-cheat are stronger.
+- No MMO-scale world claim.
+- No unlimited-free-hosting claim.
 
 ## Release rule
 
-A multiplayer feature is not reliable because source code exists or CI passes with a mock transport. It needs a real two-client test across independent networks.
+A phase is complete only when its implementation, tests, documentation and operational evidence are present. A checked box must not represent planned or unverified work.
