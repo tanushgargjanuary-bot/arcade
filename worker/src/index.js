@@ -33,7 +33,7 @@ export default {
 
     const roomId = url.searchParams.get("room") || "";
     const name = cleanPlayerName(url.searchParams.get("name") || "");
-    if (!validRoomId(roomId)) return json({ error: "Room code must contain 3–24 letters, numbers, underscores or hyphens." }, 400);
+    if (!validRoomId(roomId)) return json({ error: "Room code must contain 8–24 letters, numbers, underscores or hyphens." }, 400);
     if (!name) return json({ error: "Player name must contain 2–16 letters, numbers, spaces, underscores or hyphens." }, 400);
 
     const clientIp = request.headers.get("CF-Connecting-IP");
